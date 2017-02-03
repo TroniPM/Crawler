@@ -82,16 +82,17 @@ int randomNumber() {
 
 void init() {
     logs("init()");
-    system("mkdir workspace_crowler");
+    int i = system("mkdir workspace_crowler");
+
 }
 
 void ending() {
     logs("ending()");
     system("rm -rf workspace_crowler");
 
-    if (currentURL != NULL) {
+    /*if (currentURL != NULL) {
         fclose(currentURL);
-    }
+    }*/
 }
 
 char* readfile(char *filename) {
@@ -135,6 +136,10 @@ void openLinkFile() {
     currentURL = fopen("links.txt", "a+");
 }
 
+void closeLinkFile() {
+    fclose(currentURL);
+}
+
 char *trimwhitespace(char *str) {
     char *end;
 
@@ -155,12 +160,13 @@ char *trimwhitespace(char *str) {
 }
 
 void writeLinkOnFile(char *txt) {
+    openLinkFile();
     if (currentURL != NULL) {
         int ch = 0;
         int lines = 1;
         while (!feof(currentURL)) {
             ch = fgetc(currentURL);
-            if (ch == '\n') {
+            if (ch == '\n' || ch == '\r') {
                 lines++;
             }
         }
@@ -168,62 +174,17 @@ void writeLinkOnFile(char *txt) {
         //logi(lines);
         fprintf(currentURL, "%d - %s\n", lines, trimwhitespace(txt));
     }
+    closeLinkFile();
 }
 
-/** argumento 1 será o link
- * argumento 2 será o nível de procura (até 5)
+/**
+ * char *a = "allblldddlll";
+ * char *c = str_replace("ll" , "xll" , a);
+ * @param search: substring a ser procurada
+ * @param replace: substring q irá substituir
+ * @param subject: string original
+ * @return nova string
  */
-int main(int argc, char *argv[]) {
-    init();
-
-    /*char url[] = "www.openbsd.org";
-    int num = randomNumber();
-    //logi(num);
-    char nomeArquivo[100];
-    sprintf(nomeArquivo, "./workspace_crowler/%d%d.txt", num, getpid());
-    //logs(nomeArquivo);
-
-
-    char command[50];
-    sprintf(command, "wget -q --output-document=%s ", nomeArquivo);
-
-    logs("main() goes to run wget");
-    int res = system(concat(command, url)); //-q não mostrar output
-
-    if (res == 0) {
-        logs("URL ENCONTRADA");
-        //extracting data
-
-
-        openLinkFile();
-        if (currentURL != NULL) {
-            const char *text = "Write this to the file";
-            writeLinkOnFile(text);
-        } else {
-            logs("Arquivo de LINKS é NULL");
-        }
-    } else {
-        logs(concat("ERRO: URL INVÁLIDO OU SERVIDOR NÃO RESPONDEU DE MANEIRA INESPERADA: ", url));
-    }
-
-    parser();
-
-     */
-
-
-
-    openLinkFile();
-    parserNew();
-
-
-
-    ending();
-
-
-    printf("QUANTIDADE DE LINKS: %d", qntd_links);
-    return (EXIT_SUCCESS);
-}
-
 char *str_replace(char *search, char *replace, char *subject) {
     char *p = NULL, *old = NULL, *new_subject = NULL;
     int c = 0, search_size;
@@ -354,6 +315,47 @@ int containsAtSting(char * original, char * tofind) {
     }
 }
 
+/*
+== PASS ==  0: substr(buffer, 20, "string", 0) = ""
+== PASS ==  1: substr(buffer, 20, "string", 1) = "s"
+== PASS ==  2: substr(buffer, 20, "string", 2) = "st"
+== PASS ==  3: substr(buffer, 20, "string", 3) = "str"
+== PASS ==  4: substr(buffer, 20, "string", 4) = "stri"
+== PASS ==  5: substr(buffer, 20, "string", 5) = "strin"
+== PASS ==  6: substr(buffer, 20, "string", 6) = "string"
+== PASS ==  7: substr(buffer, 20, "string", 7) = "string"
+== PASS ==  8: substr(buffer, 20, "string", -1) = "g"
+== PASS ==  9: substr(buffer, 20, "string", -2) = "ng"
+== PASS == 10: substr(buffer, 20, "string", -3) = "ing"
+== PASS == 11: substr(buffer, 20, "string", -4) = "ring"
+== PASS == 12: substr(buffer, 20, "string", -5) = "tring"
+== PASS == 13: substr(buffer, 20, "string", -6) = "string"
+== PASS == 14: substr(buffer, 20, "string", -7) = "string"
+ */
+void substr(char *buffer, size_t buflen, char const *source, int len) {
+    size_t srclen = strlen(source);
+    size_t nbytes = 0;
+    size_t offset = 0;
+    size_t sublen;
+
+    if (buflen == 0) /* Can't write anything anywhere */
+        return;
+    if (len > 0) {
+        sublen = len;
+        nbytes = (sublen > srclen) ? srclen : sublen;
+        offset = 0;
+    } else if (len < 0) {
+        sublen = -len;
+        nbytes = (sublen > srclen) ? srclen : sublen;
+        offset = srclen - nbytes;
+    }
+    if (nbytes >= buflen)
+        nbytes = 0;
+    if (nbytes > 0)
+        memmove(buffer, source + offset, nbytes);
+    buffer[nbytes] = '\0';
+}
+
 void tratarLinha(char * linha) {
     int qtd = contarOcorrencias(linha, " href=");
     //printf("Quantidade de Links: %d || %s", qtd, linha);
@@ -372,13 +374,16 @@ void tratarLinha(char * linha) {
             while (pch != NULL) {
                 if (checkIfLineContainsLink(pch)) {
                     //Removendo href= da linha
+
                     memmove(pch, pch + 5, strlen(pch));
+                    //Veficação de link (ver se é html/htm aqui)
+                    if (strcmp(pch, "\"#\"") != 0
+                            && strlen(pch) > 2) {
+                        logs(pch);
+                        writeLinkOnFile(pch);
+                        qntd_links++;
+                    }
 
-                    //escrevendo no arquivo
-                    writeLinkOnFile(pch);
-                    logs(pch);
-
-                    qntd_links++;
                 }
 
                 pch = strtok(NULL, " ");
@@ -387,13 +392,13 @@ void tratarLinha(char * linha) {
     }
 }
 
-int parserNew() {
+int parserNew(char * filename) {
     FILE * fp;
     char * line = NULL;
     size_t len = 0;
     ssize_t read;
     /**/
-    fp = fopen("index.html", "r");
+    fp = fopen(filename, "r");
     if (fp == NULL)
         exit(EXIT_FAILURE);
 
@@ -408,4 +413,47 @@ int parserNew() {
     fclose(fp);
     if (line)
         free(line);
+}
+
+/** argumento 1 será o link
+ * argumento 2 será o nível de procura (até 5)
+ */
+int main(int argc, char *argv[]) {
+    init();
+
+    //char url[] = "www.openbsd.org";
+    char url[] = "www.garanhuns.pe.gov.br/";
+    int num = randomNumber();
+    //logi(num);
+    char nomeArquivo[100];
+    sprintf(nomeArquivo, "./workspace_crowler/%d%d.txt", num, getpid());
+    //logs(nomeArquivo);
+
+
+    char command[100];
+    sprintf(command, "wget -q --output-document=%s ", nomeArquivo);
+
+    logs("main() goes to run wget");
+    int res = system(concat(command, url)); //-q não mostrar output
+
+    if (res == 0) {
+        logs("URL ENCONTRADA");
+        logs(nomeArquivo);
+        parserNew(nomeArquivo);
+
+    } else {
+        logs(concat("ERRO: URL INVÁLIDO OU SERVIDOR NÃO RESPONDEU DE MANEIRA INESPERADA: ", url));
+    }
+
+
+
+
+
+    ending();
+
+
+    printf("QUANTIDADE DE LINKS: %d", qntd_links);
+
+    printf("\"");
+    return (EXIT_SUCCESS);
 }
