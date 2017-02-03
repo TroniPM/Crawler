@@ -6,15 +6,17 @@
  * AUTHOR: Paulo Mateus
  * LAST REVISED: 03/fev/17
  ******************************************************************************/
+//REGEX FOR LINK <a\s+(?:[^>]*?\s+)?href="([^"]*)"
+#include <string.h>
 #include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
-#include <sys/time.h>
-
-
 #include <sys/types.h>
 #include <unistd.h>
+#include <regex.h>  
+#include <assert.h>
+#include <ctype.h>
 
 #define NUM_THREADS 5
 #define ISDEBUG 1
@@ -22,6 +24,8 @@
 
 
 FILE* currentURL;
+
+int qntd_links = 0;
 
 void *PrintHello(void *threadid) {
     long tid;
@@ -32,12 +36,7 @@ void *PrintHello(void *threadid) {
     pthread_exit(NULL);
 }
 
-/*int main(int argc, char *argv[]) {
-
-    //struct timeval stop, start;
-
-    //gettimeofday(&start, NULL);
-
+int createThread(int argc, char *argv[]) {
     pthread_t threads[NUM_THREADS];
     int rc;
     long t;
@@ -50,18 +49,7 @@ void *PrintHello(void *threadid) {
         }
     }
 
-    //gettimeofday(&stop, NULL);
-
-    //printf("\nOperation took %lu milliseconds\n", stop.tv_usec - start.tv_usec);
     pthread_exit(NULL);
-}*/
-
-int gettime() {
-    struct timeval tv;
-    gettimeofday(&tv, NULL);
-
-    unsigned long time_in_micros = 1000000 * tv.tv_sec + tv.tv_usec;
-    return time_in_micros;
 }
 
 char* concat(const char *s1, const char *s2) {
@@ -95,12 +83,6 @@ int randomNumber() {
 void init() {
     logs("init()");
     system("mkdir workspace_crowler");
-}
-
-char intToString(int value) {
-    char buffer[20];
-    snprintf(buffer, 20, "%d", value);
-    return buffer;
 }
 
 void ending() {
@@ -153,6 +135,25 @@ void openLinkFile() {
     currentURL = fopen("links.txt", "a+");
 }
 
+char *trimwhitespace(char *str) {
+    char *end;
+
+    // Trim leading space
+    while (isspace((unsigned char) *str)) str++;
+
+    if (*str == 0) // All spaces?
+        return str;
+
+    // Trim trailing space
+    end = str + strlen(str) - 1;
+    while (end > str && isspace((unsigned char) *end)) end--;
+
+    // Write new null terminator
+    *(end + 1) = 0;
+
+    return str;
+}
+
 void writeLinkOnFile(char *txt) {
     if (currentURL != NULL) {
         int ch = 0;
@@ -164,19 +165,18 @@ void writeLinkOnFile(char *txt) {
             }
         }
 
-        logi(lines);
-        fprintf(currentURL, "%d - %s\n", lines, txt);
+        //logi(lines);
+        fprintf(currentURL, "%d - %s\n", lines, trimwhitespace(txt));
     }
 }
 
 /** argumento 1 será o link
  * argumento 2 será o nível de procura (até 5)
- * 
  */
 int main(int argc, char *argv[]) {
     init();
 
-    char url[] = "www.openbsd.org";
+    /*char url[] = "www.openbsd.org";
     int num = randomNumber();
     //logi(num);
     char nomeArquivo[100];
@@ -192,10 +192,8 @@ int main(int argc, char *argv[]) {
 
     if (res == 0) {
         logs("URL ENCONTRADA");
-
-
         //extracting data
-        parser();
+
 
         openLinkFile();
         if (currentURL != NULL) {
@@ -208,17 +206,206 @@ int main(int argc, char *argv[]) {
         logs(concat("ERRO: URL INVÁLIDO OU SERVIDOR NÃO RESPONDEU DE MANEIRA INESPERADA: ", url));
     }
 
+    parser();
+
+     */
+
+
+
+    openLinkFile();
+    parserNew();
+
+
+
     ending();
+
+
+    printf("QUANTIDADE DE LINKS: %d", qntd_links);
     return (EXIT_SUCCESS);
 }
 
-void parser() {
-    /**
-     * ler arquivo criado (aleatorio) por linha
-     * A cada linha, verificar se tal linha possui link (regex)
-     * obter conteudo dentro do regex
-     * salvar url em um array
-     * verificar duplicação de links
-     * salvar em arquivo
-     */
+char *str_replace(char *search, char *replace, char *subject) {
+    char *p = NULL, *old = NULL, *new_subject = NULL;
+    int c = 0, search_size;
+
+    search_size = strlen(search);
+
+    //Count how many occurences
+    for (p = strstr(subject, search); p != NULL; p = strstr(p + search_size, search)) {
+        c++;
+    }
+
+    //Final size
+    c = (strlen(replace) - search_size) * c + strlen(subject);
+
+    //New subject with new size
+    new_subject = malloc(c);
+
+    //Set it to blank
+    strcpy(new_subject, "");
+
+    //The start position
+    old = subject;
+
+    for (p = strstr(subject, search); p != NULL; p = strstr(p + search_size, search)) {
+        //move ahead and copy some text from original subject , from a certain position
+        strncpy(new_subject + strlen(new_subject), old, p - old);
+
+        //move ahead and copy the replacement text
+        strcpy(new_subject + strlen(new_subject), replace);
+
+        //The new start position after this search match
+        old = p + search_size;
+    }
+
+    //Copy the part after the last search match
+    strcpy(new_subject + strlen(new_subject), old);
+
+    return new_subject;
+}
+
+/*
+ return 1 if has link
+ return 0 if hasn't link
+ */
+int checkIfLineContainsLink(char * line) {
+    regex_t regex;
+    int reti;
+    char msgbuf[100];
+    int result;
+    /**/
+    /* Compile regular expression */
+    reti = regcomp(&regex, "href=", 0);
+    if (reti) {
+        logs("Could not compile regex");
+        return 0;
+    }
+
+    reti = regexec(&regex, line, 0, NULL, 0);
+    if (!reti) {
+        result = 1; //Is link
+    } else if (reti == REG_NOMATCH) {
+        result = 0; //No link
+    }
+
+    regfree(&regex);
+    return result;
+}
+
+char** str_split(char* a_str, const char a_delim) {
+    char** result = 0;
+    size_t count = 0;
+    char* tmp = a_str;
+    char* last_comma = 0;
+    char delim[2];
+    delim[0] = a_delim;
+    delim[1] = 0;
+
+    /* Count how many elements will be extracted. */
+    while (*tmp) {
+        if (a_delim == *tmp) {
+            count++;
+            last_comma = tmp;
+        }
+        tmp++;
+    }
+
+    /* Add space for trailing token. */
+    count += last_comma < (a_str + strlen(a_str) - 1);
+
+    /* Add space for terminating null string so caller
+       knows where the list of returned strings ends. */
+    count++;
+
+    result = malloc(sizeof (char*) * count);
+
+    if (result) {
+        size_t idx = 0;
+        char* token = strtok(a_str, delim);
+
+        while (token) {
+            assert(idx < count);
+            *(result + idx++) = strdup(token);
+            token = strtok(0, delim);
+        }
+        assert(idx == count - 1);
+        *(result + idx) = 0;
+    }
+
+    return result;
+}
+
+int contarOcorrencias(char * linha, char * string2find) {
+    int count = 0;
+    const char *tmp = linha;
+    while (tmp = strstr(tmp, string2find)) {
+        count++;
+        tmp++;
+    }
+
+    return count;
+}
+
+int containsAtSting(char * original, char * tofind) {
+    if (strstr(original, tofind) != NULL) {
+        return 1;
+    } else {
+        return 0;
+    }
+}
+
+void tratarLinha(char * linha) {
+    int qtd = contarOcorrencias(linha, " href=");
+    //printf("Quantidade de Links: %d || %s", qtd, linha);
+
+    char *token, *tokenTrimmed, *string, *tofree;
+    tofree = string = strdup(linha);
+
+    while ((token = strsep(&string, ">")) != NULL) {
+        if (checkIfLineContainsLink(token)) {
+
+            tokenTrimmed = trimwhitespace(token);
+            char * pch;
+
+            pch = strtok(tokenTrimmed, " "); //" ,.-"
+
+            while (pch != NULL) {
+                if (checkIfLineContainsLink(pch)) {
+                    //Removendo href= da linha
+                    memmove(pch, pch + 5, strlen(pch));
+
+                    //escrevendo no arquivo
+                    writeLinkOnFile(pch);
+                    logs(pch);
+
+                    qntd_links++;
+                }
+
+                pch = strtok(NULL, " ");
+            }
+        }
+    }
+}
+
+int parserNew() {
+    FILE * fp;
+    char * line = NULL;
+    size_t len = 0;
+    ssize_t read;
+    /**/
+    fp = fopen("index.html", "r");
+    if (fp == NULL)
+        exit(EXIT_FAILURE);
+
+    while ((read = getline(&line, &len, fp)) != -1) {
+        //printf("Retrieved line of length %zu :\n", read);
+        //printf("%s", line);
+        if (checkIfLineContainsLink(line)) {
+            tratarLinha(line);
+        }
+    }
+
+    fclose(fp);
+    if (line)
+        free(line);
 }
