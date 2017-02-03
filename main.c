@@ -1,10 +1,10 @@
 /******************************************************************************
- * FILE: hello.c
+ * FILE: main.c
  * DESCRIPTION:
- *   A "hello world" Pthreads program.  Demonstrates thread creation and
- *   termination.
- * AUTHOR: Blaise Barney
- * LAST REVISED: 08/09/11
+ *   Criado para disciplina de Sistemas Operacionais. Crowler para obter todos
+ *   os links possíveis (html e htm) de mesmo domínio de um website.
+ * AUTHOR: Paulo Mateus
+ * LAST REVISED: 03/fev/17
  ******************************************************************************/
 #include <pthread.h>
 #include <stdio.h>
@@ -213,7 +213,6 @@ int main(int argc, char *argv[]) {
 }
 
 void parser() {
-    //ler arquivo por linha
     /**
      * ler arquivo criado (aleatorio) por linha
      * A cada linha, verificar se tal linha possui link (regex)
