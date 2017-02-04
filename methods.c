@@ -9,11 +9,26 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include "methods.h"
+//#include "methods.h"
+#include "settings.h"
 
 #define ISDEBUG 1
 
-void logs(const char*txt) {
+char * getDomainWithOutBar() {
+    if (str_endsWith(URL_DOMAIN, "/")) {
+        return str_removeLastCharFromString(URL_DOMAIN);
+    }
+    return URL_DOMAIN;
+}
+
+char * getDomainWithBar() {
+    if (!str_endsWith(URL_DOMAIN, "/")) {
+        return str_concat(URL_DOMAIN, "/");
+    }
+    return URL_DOMAIN;
+}
+
+void logs(const char* txt) {
     if (ISDEBUG == 1) {
         printf("LOG: %s\n", txt);
     }

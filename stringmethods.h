@@ -9,6 +9,8 @@
 
 #ifndef STRINGMETHODS_H
 #define STRINGMETHODS_H
+
+void stringmethods_init(char * d) ;
 char* str_trim(char *str);
 char* str_concat(const char *s1, const char *s2);
 char* str_replace(char *search, char *replace, char *subject);
@@ -19,7 +21,15 @@ int str_countOccurrences(char * linha, char * string2find);
 int checkIfLineContainsLink(char * line);
 int str_endsWith(const char *str, const char *suffix);
 char * str_removeLastCharFromString(char* str);
-int startsWith(const char *str, const char *prefix);
+int str_startsWith(const char *str, const char *prefix);
+char * str_removeFirstCharFromString(char* str);
+int checkIfStringHasForbiddenEnding(char* str);
+char * tratarLink(char* link);
+char * addBarraAString(char * str);
+char * completarLink(char * str);
+int checkIfLinkIsSameDomain(char * str);
+char * str_toLowerCase(char * str);
+char * str_toUpperCase(char * str);
 
 
 //#ifdef __cplusplus

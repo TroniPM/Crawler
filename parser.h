@@ -14,7 +14,11 @@ void openLinkFile();
 void closeLinkFile();
 void writeLinkOnFile(char *txt);
 void tratarLinha(char * linha);
-int parserINIT(char * filename, char * url);
+int parserINIT(char * filename);
+
+extern char* EXTENSIONS_PROHIBITED;
+extern char* EXTENSIONS_ALLOWED;
+
 //#ifdef __cplusplus
 //extern "C" {
 //#endif

@@ -20,40 +20,47 @@
 
 #include "methods.h"
 #include "stringmethods.h"
+#include "settings.h"
 
-#define PRINT_LINKS_FOUND 1
+//#define PRINT_LINKS_FOUND 1
 
-FILE* currentURL;
+FILE* CURRENT_URL_FILE;
+char * FILENAME;
+char * PATH;
+//char * DOMAIN;
 
 void openLinkFile() {
-    currentURL = fopen("links.txt", "a+");
+    CURRENT_URL_FILE = fopen("links.txt", "a+");
+    //CURRENT_URL_FILE = fopen(FILENAME, "a+");
 }
 
 void closeLinkFile() {
-    fclose(currentURL);
+    fclose(CURRENT_URL_FILE);
 }
 
 void writeLinkOnFile(char *txt) {
+    //logs("writeLinkOnFile()");
     openLinkFile();
-    if (currentURL != NULL) {
+    if (CURRENT_URL_FILE != NULL) {
         int ch = 0;
         int lines = 1;
-        while (!feof(currentURL)) {
-            ch = fgetc(currentURL);
+        while (!feof(CURRENT_URL_FILE)) {
+            ch = fgetc(CURRENT_URL_FILE);
             if (ch == '\n' || ch == '\r') {
                 lines++;
             }
         }
 
         //logi(lines);
-        fprintf(currentURL, "%d - %s\n", lines, str_trim(txt));
+        fprintf(CURRENT_URL_FILE, "%d - %s\n", lines, str_trim(txt));
     }
     closeLinkFile();
 }
 
 int tratarLinha(char * linha) {
-    int qtd = str_countOccurrences(linha, " href=");
-    qtd = 0;
+    //logs("tratarLinha()");
+    //int qtd = str_countOccurrences(linha, " href=");//qntd de links na mesma linha
+    int qtd = 0;
     //printf("Quantidade de Links: %d || %s", qtd, linha);
 
     char *token, *tokenTrimmed, *string, *tofree;
@@ -69,22 +76,24 @@ int tratarLinha(char * linha) {
 
             while (pch != NULL) {
                 if (checkIfLineContainsLink(pch)) {
-                    //Removendo href= da linha
-                    memmove(pch, pch + 5, strlen(pch));
-                    //Veficação de link (ver se é html/htm aqui)
-                    if (strcmp(pch, "\"#\"") != 0
-                            && strlen(pch) > 2) {
-                        if (str_endsWith(pch, ".css\"")
-                                || str_endsWith(pch, ".js\"")
-                                || str_endsWith(pch, ".xml\"")
-                                || str_endsWith(pch, ".ico\"")
-                                || str_endsWith(pch, ".php\"")) {
-                        } else {
-                            if (PRINT_LINKS_FOUND) {
-                                logs(str_concat("LINK: ", pch));
+                    char * str = tratarLink(pch);
+
+                    //Não salvo se link for VAZIO
+                    if (strlen(str) != 0) {
+                        //DESnegar linha para salvar links proibidos (jpg, png, js, css....)
+                        if (!checkIfStringHasForbiddenEnding(str)) {
+                            str = completarLink(str);
+
+                            //NEGAR linha para salvar links de outros domínios
+                            if (checkIfLinkIsSameDomain(str)) {
+                                if (str_endsWith(str, "/"))
+                                    str = str_removeLastCharFromString(str);
+                                if (PRINT_LINKS_FOUND) {
+                                    logs(str_concat("LINK: ", str));
+                                }
+                                writeLinkOnFile(str);
+                                qtd++;
                             }
-                            writeLinkOnFile(pch);
-                            qtd++;
                         }
                     }
 
@@ -97,17 +106,20 @@ int tratarLinha(char * linha) {
     return qtd;
 }
 
-int parserINIT(char * filename, char * url) {
-    if (str_endsWith(url, "/"))
-        str_removeLastCharFromString(url);
-    logs(str_concat("parserINIT() ", url));
+int parserINIT(char * file_name) {
+
+    //DOMAIN = url;
+    FILENAME = file_name;
+    logs(str_concat("parserINIT() ", getDomainWithOutBar()));
+
+    //stringmethods_init(URL_DOMAIN/*, /* EXTENSIONS_PROHIBITED/*, EXTENSIONS_ALLOWED*/);
 
     FILE * fp;
     char * line = NULL;
     size_t len = 0;
     ssize_t read;
     /**/
-    fp = fopen(filename, "r");
+    fp = fopen(FILENAME, "r");
     if (fp == NULL) {
         logs("parserINIT() ERROR AT FILE .HTML/.HTM OPENING");
         exit(EXIT_FAILURE);
@@ -115,8 +127,6 @@ int parserINIT(char * filename, char * url) {
 
     int qntd_links = 0;
     while ((read = getline(&line, &len, fp)) != -1) {
-        //printf("Retrieved line of length %zu :\n", read);
-        //printf("%s", line);
         if (checkIfLineContainsLink(line)) {
             qntd_links += tratarLinha(line);
         }

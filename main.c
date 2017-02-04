@@ -29,11 +29,16 @@
 #include <ctype.h>
 
 #include "parser.h"
-//#include "stringmethods.h"
+#include "settings.h"
 #include "methods.h"
+//#include "methods.h"
+//#include "stringmethods.h"
 
 #define NUM_THREADS 5
-#define USE_LOCAL_INDEX_HTML 0
+//#define USE_LOCAL_INDEX_HTML 1
+
+//char * workspace_main_folder = "workspace_crowler";
+//char * workspace_links_folder = "/links";
 
 void *PrintHello(void *threadid) {
     long tid;
@@ -67,7 +72,11 @@ int randomNumber() {
 }
 
 void init() {
+    // int i = system(str_concat("mkdir ", workspace_main_folder));
+
+    //int j = system(str_concat(str_concat("mkdir -p ", workspace_main_folder), workspace_links_folder));
     int i = system("mkdir workspace_crowler");
+    //int i = system("mkdir workspace_crowler");
 }
 
 void ending() {
@@ -104,6 +113,7 @@ char* readfile(char *filename) {
         if (string_size != read_size) {
             // Something went wrong, throw away the memory and set
             // the buffer to NULL
+
             free(buffer);
             buffer = NULL;
         }
@@ -124,7 +134,7 @@ int main(int argc, char *argv[]) {
     int qntd_links = 0;
 
     if (USE_LOCAL_INDEX_HTML == 0) {
-        char url[] = "www.openbsd.org";
+        //char url[] = "www.openbsd.org";
         //char url[] = "www.garanhuns.pe.gov.br/";
         int num = randomNumber();
         //logi(num);
@@ -136,22 +146,23 @@ int main(int argc, char *argv[]) {
         char command[100];
         sprintf(command, "wget -q --output-document=%s ", nomeArquivo);
 
-        logs("main() goes to run wget");
+        logs(str_concat("main() goes to run wget: ", getDomainWithBar()));
 
-        int res = system(str_concat(command, url)); //-q não mostrar output
+        int res = system(str_concat(command, getDomainWithBar())); //-q não mostrar output
 
         if (res == 0) {
             logs("URL DOWNLOADED");
             char* aux = str_concat("FILENAME AND PATH: ", nomeArquivo);
             logs(aux);
 
-            qntd_links = parserINIT(nomeArquivo, url);
+            qntd_links = parserINIT(nomeArquivo);
 
         } else {
-            logs(str_concat("ERRO: URL INVÁLIDO OU SERVIDOR NÃO RESPONDEU DE MANEIRA INESPERADA: ", url));
+            logs(str_concat("ERRO: URL INVÁLIDO OU SERVIDOR NÃO RESPONDEU DE MANEIRA INESPERADA: ", getDomainWithBar()));
         }
     } else {
-        qntd_links = parserINIT("index1.html", "localhost");
+        //qntd_links = parserINIT("indexOPENBSD.html");
+        qntd_links = parserINIT("indexPMG.html");
     }
 
     ending();

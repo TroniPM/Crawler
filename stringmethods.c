@@ -19,6 +19,8 @@
 #include <ctype.h>
 
 #include "methods.h"
+#include "stringmethods.h"
+#include "settings.h"
 
 char* str_trim(char *str) {
     char *end;
@@ -205,6 +207,7 @@ int str_countOccurrences(char * linha, char * string2find) {
  return 0 if hasn't link
  */
 int checkIfLineContainsLink(char * line) {
+    //logs("checkIfLineContainsLink()");
     regex_t regex;
     int reti;
     char msgbuf[100];
@@ -238,14 +241,133 @@ int str_endsWith(const char *str, const char *suffix) {
     return strncmp(str + lenstr - lensuffix, suffix, lensuffix) == 0;
 }
 
-int startsWith(const char *str, const char *prefix) {
+int str_startsWith(const char *str, const char *prefix) {
     size_t lenpre = strlen(prefix),
             lenstr = strlen(str);
     return lenstr < lenpre ? 0 : strncmp(prefix, str, lenpre) == 0;
 }
 
 char * str_removeLastCharFromString(char* str) {
-    int i = strlen(str);
-    str[i - 1] = 0;
-    return str;
+    char * aux = str;
+    int i = strlen(aux);
+    aux[i - 1] = 0;
+    return aux;
+}
+
+char * str_removeFirstCharFromString(char* str) {
+    char * aux = str;
+    memmove(aux, aux + 1, strlen(aux));
+
+    return aux;
+}
+
+int checkIfStringHasForbiddenEnding(char* str) {
+    char ** tokens = str_split(str, '?'); //As vezes existem parameters ao final do link
+    int i;
+    for (i = 0; *(tokens + i); i++) {
+        if (str_endsWith(*(tokens + i), ".css")
+                || str_endsWith(*(tokens + i), ".js")
+                || str_endsWith(*(tokens + i), ".xml")
+                || str_endsWith(*(tokens + i), ".ico")
+                || str_endsWith(*(tokens + i), ".jpg")
+                || str_endsWith(*(tokens + i), ".png")
+                || str_endsWith(*(tokens + i), ".csp")
+                || str_endsWith(*(tokens + i), ".do")
+                || str_endsWith(*(tokens + i), ".jsf")
+                || str_endsWith(*(tokens + i), ".php")
+                || strcmp(*(tokens + i), "#") == 0) {//Verifico se linha é igual a # (ancora)
+            return 1;
+        }
+        //        else {
+        //            return 0;
+        //        }
+
+        //free(*(tokens + i));
+    }
+    return 0;
+
+}
+
+char * tratarLink(char* link) {
+    //logs("tratarLink()");
+    char * aux = link; //str_replace(" ", "", link);
+
+    //Removendo (href=) e (data-href=) da linha
+    if (str_startsWith(aux, "data-href=")) {
+        memmove(aux, aux + 10, strlen(aux));
+    } else if (str_startsWith(aux, "href=")) {
+        memmove(aux, aux + 5, strlen(aux));
+    }
+
+    //
+    //removo aspas iniciais
+    aux = str_removeFirstCharFromString(aux);
+    //removo aspas finais
+    aux = str_removeLastCharFromString(aux);
+
+    //char * aux1;
+    //logc(aux[strlen(aux) - 1]);
+    //    if (strlen(aux) > 0) {
+    //        if (strlen(aux) == 1 && aux[0] == '#' && aux[0] == '/') {
+    //            //dummy if
+    //        } else {
+    //            //aux = addBarraAString(aux);
+    //        }
+    //    }
+    return aux;
+}
+
+char * addBarraAString(char * str) {
+    char * aux = str;
+    if (!str_endsWith(aux, "/")) {
+        aux = str_concat(aux, "/");
+    }
+    return aux;
+}
+
+char * str_toLowerCase(char * str) {
+    char * aux = str;
+    for (int i = 0; str[i]; i++) {
+        aux[i] = tolower(str[i]);
+    }
+
+    return aux;
+}
+
+char * str_toUpperCase(char * str) {
+    char * aux = str;
+    for (int i = 0; str[i]; i++) {
+        aux[i] = toupper(str[i]);
+    }
+
+    return aux;
+}
+
+char * completarLink(char * str) {
+    //logs("completarLink()");
+    char * aux = addBarraAString(str);
+    if (str_startsWith(aux, "http") || str_startsWith(aux, "www")) {
+        //dummy if
+    } else if (str_startsWith(aux, "/") && !str_startsWith(aux, "//")) {
+        aux = str_concat(getDomainWithOutBar(), aux);
+    } else if (!str_contains(aux, ".")) {
+        aux = str_concat(getDomainWithBar(), aux);
+    } else if (str_endsWith(str, ".html") || str_endsWith(str, ".htm")) {
+        aux = str_concat(getDomainWithBar(), aux);
+    }
+
+    return aux;
+}
+
+int checkIfLinkIsSameDomain(char * str) {
+    //logs("checkIfLinkIsSameDomain()");
+    char * aux = str;
+    //logs(str_concat(str, str_concat("\t|||\t", DOMAIN)));
+
+    if (str_contains(str, getDomainWithOutBar())) {
+        return 1;
+    } else {
+        //logs("NÃO EH MESMO DOMINIO");
+        return 0;
+    }
 }
