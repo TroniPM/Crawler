@@ -17,9 +17,9 @@ In future, you'll can also:
 * execve
 
 ### Building and Running
+Do NOT forget add this parameter at your build:
 ```sh
-$ gcc -pthread main.c -o crowlerExecutavel
-$ ./crowlerExecutavel YourURL
+$ gcc -pthread...
 ```
 The output file will be saved at same source folder as "links.txt".
 ### Developed By
