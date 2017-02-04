@@ -1,8 +1,11 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
+/******************************************************************************
+ * FILE: stringmethods.c
+ * DESCRIPTION:
+ *   Crowler para obter todos os links (.html/.htm) do código fonte da página.
+ * AUTHOR: Paulo Mateus
+ * EMAIL: paulomatew@gmail.com
+ * LAST REVISED: 04/fev/17
+ ******************************************************************************/
 
 #include <string.h>
 //#include <pthread.h>
@@ -233,4 +236,16 @@ int str_endsWith(const char *str, const char *suffix) {
     if (lensuffix > lenstr)
         return 0;
     return strncmp(str + lenstr - lensuffix, suffix, lensuffix) == 0;
+}
+
+int startsWith(const char *str, const char *prefix) {
+    size_t lenpre = strlen(prefix),
+            lenstr = strlen(str);
+    return lenstr < lenpre ? 0 : strncmp(prefix, str, lenpre) == 0;
+}
+
+char * str_removeLastCharFromString(char* str) {
+    int i = strlen(str);
+    str[i - 1] = 0;
+    return str;
 }

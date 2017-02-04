@@ -1,12 +1,22 @@
 /******************************************************************************
  * FILE: main.c
  * DESCRIPTION:
- *   Criado para disciplina de Sistemas Operacionais. Crowler para obter todos
- *   os links possíveis (html e htm) de mesmo domínio de um website.
+ *   Crowler para obter todos os links (.html/.htm) do código fonte da página.
  * AUTHOR: Paulo Mateus
- * LAST REVISED: 03/fev/17
+ * EMAIL: paulomatew@gmail.com
+ * LAST REVISED: 04/fev/17
  ******************************************************************************/
-//REGEX FOR LINK <a\s+(?:[^>]*?\s+)?href="([^"]*)"
+/*
+ * TODO:
+ * 1- Fazer verificação nos links obtidos:
+ *  a- Ver se são do mesmo domínio;
+ *  b- Completar links que possuam apenas o nome da página (EX: about.html)->(www...com/about.html;
+ *  c- Completar links que possuam apenas o folder (EX: /painel)->(www...com/painel);
+ * 2- Salvar todos os links obtidos do source code e salvar em um arquivo dentro da pasta workspace.
+ * 3- Pegar todos os links em todos os arquivos criados e juntá-los em um.
+ */
+
+
 #include <string.h>
 #include <pthread.h>
 #include <stdio.h>
@@ -23,7 +33,7 @@
 #include "methods.h"
 
 #define NUM_THREADS 5
-#define USE_LOCAL_INDEX_HTML 1
+#define USE_LOCAL_INDEX_HTML 0
 
 void *PrintHello(void *threadid) {
     long tid;
@@ -114,8 +124,8 @@ int main(int argc, char *argv[]) {
     int qntd_links = 0;
 
     if (USE_LOCAL_INDEX_HTML == 0) {
-        //char url[] = "www.openbsd.org";
-        char url[] = "www.garanhuns.pe.gov.br/";
+        char url[] = "www.openbsd.org";
+        //char url[] = "www.garanhuns.pe.gov.br/";
         int num = randomNumber();
         //logi(num);
         char nomeArquivo[100];
@@ -135,13 +145,13 @@ int main(int argc, char *argv[]) {
             char* aux = str_concat("FILENAME AND PATH: ", nomeArquivo);
             logs(aux);
 
-            qntd_links = parserINIT(nomeArquivo);
+            qntd_links = parserINIT(nomeArquivo, url);
 
         } else {
             logs(str_concat("ERRO: URL INVÁLIDO OU SERVIDOR NÃO RESPONDEU DE MANEIRA INESPERADA: ", url));
         }
     } else {
-        qntd_links = parserINIT("index1.html");
+        qntd_links = parserINIT("index1.html", "localhost");
     }
 
     ending();

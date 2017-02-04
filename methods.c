@@ -1,8 +1,11 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
+/******************************************************************************
+ * FILE: methods.c
+ * DESCRIPTION:
+ *   Crowler para obter todos os links (.html/.htm) do código fonte da página.
+ * AUTHOR: Paulo Mateus
+ * EMAIL: paulomatew@gmail.com
+ * LAST REVISED: 04/fev/17
+ ******************************************************************************/
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -19,6 +22,12 @@ void logs(const char*txt) {
 void logi(const int txt) {
     if (ISDEBUG == 1) {
         printf("LOG: %d\n", txt);
+    }
+}
+
+void logc(const char txt) {
+    if (ISDEBUG == 1) {
+        printf("LOG: %c\n", txt);
     }
 }
 

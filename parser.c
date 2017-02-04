@@ -1,8 +1,11 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
+/******************************************************************************
+ * FILE: parser.c
+ * DESCRIPTION:
+ *   Crowler para obter todos os links (.html/.htm) do código fonte da página.
+ * AUTHOR: Paulo Mateus
+ * EMAIL: paulomatew@gmail.com
+ * LAST REVISED: 04/fev/17
+ ******************************************************************************/
 
 #include <string.h>
 //#include <pthread.h>
@@ -18,7 +21,7 @@
 #include "methods.h"
 #include "stringmethods.h"
 
-#define PRINT_LINKS_FOUND 0
+#define PRINT_LINKS_FOUND 1
 
 FILE* currentURL;
 
@@ -67,15 +70,22 @@ int tratarLinha(char * linha) {
             while (pch != NULL) {
                 if (checkIfLineContainsLink(pch)) {
                     //Removendo href= da linha
-
                     memmove(pch, pch + 5, strlen(pch));
                     //Veficação de link (ver se é html/htm aqui)
                     if (strcmp(pch, "\"#\"") != 0
                             && strlen(pch) > 2) {
-                        if (PRINT_LINKS_FOUND)
-                            logs(pch);
-                        writeLinkOnFile(pch);
-                        qtd++;
+                        if (str_endsWith(pch, ".css\"")
+                                || str_endsWith(pch, ".js\"")
+                                || str_endsWith(pch, ".xml\"")
+                                || str_endsWith(pch, ".ico\"")
+                                || str_endsWith(pch, ".php\"")) {
+                        } else {
+                            if (PRINT_LINKS_FOUND) {
+                                logs(str_concat("LINK: ", pch));
+                            }
+                            writeLinkOnFile(pch);
+                            qtd++;
+                        }
                     }
 
                 }
@@ -87,7 +97,11 @@ int tratarLinha(char * linha) {
     return qtd;
 }
 
-int parserINIT(char * filename) {
+int parserINIT(char * filename, char * url) {
+    if (str_endsWith(url, "/"))
+        str_removeLastCharFromString(url);
+    logs(str_concat("parserINIT() ", url));
+
     FILE * fp;
     char * line = NULL;
     size_t len = 0;
