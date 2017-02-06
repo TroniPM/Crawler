@@ -8,14 +8,12 @@
  ******************************************************************************/
 
 #include <string.h>
-//#include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
 #include <sys/types.h>
 #include <unistd.h>
-#include <regex.h>  
-//#include <assert.h>
+#include <regex.h>
 #include <ctype.h>
 
 #include "methods.h"
@@ -23,21 +21,17 @@
 #include "settings.h"
 #include "parser.h"
 
-//#define PRINT_LINKS_FOUND 1
-
-//FILE* CURRENT_URL_FILE;
 char * DOMAIN1;
 char * FILENAME;
 char * FILENAME_PATH_DOWNLOADED;
 char * FILENAME_LINK_WORKSPACE;
 char * FILENAME_LINK_FINAL;
 
-FILE* openFile(char * arq) {
-    //return fopen("links.txt", "a+");
-    //return fopen(str_concat("./workspace_crowler/", "links.txt"), "a+");
+char * EXTENSIONS_PROHIBITED[] = {".rb", ".rhtml", ".dll", ".cfm", ".cgi", ".svg", ".py", "jhtml", ".xhtml", ".swf", ".asp", ".aspx", ".css", ".js", ".xml", ".ico", ".jpg", ".jpeg", ".png", ".csp", ".do", ".jsf", ".jspx", ".php", ".gif"};
+char * EXTENSIONS_ALLOWED[] = {".html", ".htm"};
 
+FILE* openFile(char * arq) {
     return fopen(arq, "a+");
-    //sprintf(path, str_concat(str_concat("./", workspace_main), "%s"), nomeArquivo);
 }
 
 void closeFile(FILE* arq) {
@@ -95,7 +89,7 @@ void writeLinkOnFileFinal(char *txt) {
 
 void writeLinkOnFileOtherDomain(char *txt) {
     //logs("writeLinkOnFile()");
-    FILE * arq = openFile("links_otherDomains");
+    FILE * arq = openFile("links_otherDomains.txt");
     if (arq != NULL) {
         int ch = 0;
         int lines = 1;
@@ -193,16 +187,22 @@ int tratarLinha(char * linha) {
                                 writeLinkOnFileWorkSpace(str);
                                 qtd++;
                             } else {//OTHER DOMAIN
-                                str = removeHttpFromLink(str);
-                                if (str_endsWith(str, "/"))
-                                    str = str_removeLastCharFromString(str);
-                                writeLinkOnFileOtherDomain(str);
+                                if (SAVE_LINKS_OTHERDOMAINS) {
+                                    str = removeHttpFromLink(str);
+                                    if (str_endsWith(str, "/"))
+                                        str = str_removeLastCharFromString(str);
+                                    writeLinkOnFileOtherDomain(str);
+                                }
                             }
                         } else {//OTHER FILES
-                            str = removeHttpFromLink(str);
-                            if (str_endsWith(str, "/"))
-                                str = str_removeLastCharFromString(str);
-                            writeLinkOnFileOtherFiles(str);
+                            if (SAVE_LINKS_OTHERFILES) {
+                                if (!str_equals(str, "#")) {
+                                    str = removeHttpFromLink(str);
+                                    if (str_endsWith(str, "/"))
+                                        str = str_removeLastCharFromString(str);
+                                    writeLinkOnFileOtherFiles(str);
+                                }
+                            }
                         }
                     }
 
@@ -211,8 +211,192 @@ int tratarLinha(char * linha) {
                 pch = strtok(NULL, " ");
             }
         }
+        if (checkIfLineContainsSrc(token)) {
+            tokenTrimmed = str_trim(token);
+            char * pch;
+
+            pch = strtok(tokenTrimmed, " "); //" ,.-"
+            //logs(str_concat("!checkIfLineContainsLink() ", pch));
+            while (pch != NULL) {
+                if (checkIfLineContainsSrc(pch)) {
+                    char * str = tratarSrc(pch);
+
+                    //Não salvo se link for VAZIO
+                    if (strlen(str) != 0) {
+                        //DESnegar linha para salvar links proibidos (jpg, png, js, css....)
+                        if (!checkIfStringHasForbiddenEnding(str)) {
+                            str = completarLink(str);
+
+                            //NEGAR linha para salvar links de outros domínios
+                            if (checkIfLinkIsSameDomain(str)) {
+                                str = removeHttpFromLink(str);
+
+                                if (str_endsWith(str, "/"))
+                                    str = str_removeLastCharFromString(str);
+                                if (PRINT_LINKS_FOUND) {
+                                    logs(str_concat("LINK: ", str));
+                                }
+
+                                writeLinkOnFileWorkSpace(str);
+                                qtd++;
+                            } else {//OTHER DOMAIN
+                                if (SAVE_LINKS_OTHERDOMAINS) {
+                                    str = removeHttpFromLink(str);
+                                    if (str_endsWith(str, "/"))
+                                        str = str_removeLastCharFromString(str);
+                                    writeLinkOnFileOtherDomain(str);
+                                }
+                            }
+                        } else {//OTHER FILES
+                            if (SAVE_LINKS_OTHERFILES) {
+                                if (!str_equals(str, "#")) {
+                                    str = removeHttpFromLink(str);
+                                    if (str_endsWith(str, "/"))
+                                        str = str_removeLastCharFromString(str);
+                                    writeLinkOnFileOtherFiles(str);
+                                }
+                            }
+                        }
+                    }
+                }
+                pch = strtok(NULL, " ");
+            }
+
+        }
     }
     return qtd;
+}
+
+int checkIfLineContainsSrc(char * line) {
+    //logs("checkIfLineContainsLink()");
+    regex_t regex;
+    int reti;
+    char msgbuf[100];
+    int result;
+    /**/
+    /* Compile regular expression */
+    reti = regcomp(&regex, "src=", 0);
+    if (reti) {
+        logs("Could not compile regex");
+        return 0;
+    }
+
+    reti = regexec(&regex, line, 0, NULL, 0);
+    if (!reti) {
+        result = 1; //Is link
+    } else if (reti == REG_NOMATCH) {
+        result = 0; //No link
+    }
+
+    regfree(&regex);
+    return result;
+}
+
+/*
+ return 1 if has link
+ return 0 if hasn't link
+ */
+int checkIfLineContainsLink(char * line) {
+    //logs("checkIfLineContainsLink()");
+    regex_t regex;
+    int reti;
+    char msgbuf[100];
+    int result;
+    /**/
+    /* Compile regular expression */
+    reti = regcomp(&regex, "href=", 0);
+    if (reti) {
+        logs("Could not compile regex");
+        return 0;
+    }
+
+    reti = regexec(&regex, line, 0, NULL, 0);
+    if (!reti) {
+        result = 1; //Is link
+    } else if (reti == REG_NOMATCH) {
+        result = 0; //No link
+    }
+
+    regfree(&regex);
+    return result;
+}
+
+char * tratarLink(char* link) {
+    //logs("tratarLink()");
+    char * aux = link; //str_replace(" ", "", link);
+
+    //Removendo (href=) e (data-href=) da linha
+    if (str_startsWith(aux, "data-href=")) {
+        memmove(aux, aux + 10, strlen(aux));
+    } else if (str_startsWith(aux, "href=")) {
+        memmove(aux, aux + 5, strlen(aux));
+    }
+
+    //
+    //removo aspas iniciais
+    aux = str_removeFirstCharFromString(aux);
+    //removo aspas finais
+    aux = str_removeLastCharFromString(aux);
+
+    //char * aux1;
+    //logc(aux[strlen(aux) - 1]);
+    //    if (strlen(aux) > 0) {
+    //        if (strlen(aux) == 1 && aux[0] == '#' && aux[0] == '/') {
+    //            //dummy if
+    //        } else {
+    //            //aux = addBarraAString(aux);
+    //        }
+    //    }
+    return aux;
+}
+
+char * tratarSrc(char* link) {
+    //logs("tratarLink()");
+    char * aux = link; //str_replace(" ", "", link);
+
+    //Removendo (href=) e (data-href=) da linha
+    if (str_startsWith(aux, "src=")) {
+        memmove(aux, aux + 4, strlen(aux));
+    }
+
+    //
+    //removo aspas iniciais
+    aux = str_removeFirstCharFromString(aux);
+    //removo aspas finais
+    aux = str_removeLastCharFromString(aux);
+
+    return aux;
+}
+
+int checkIfStringHasForbiddenEnding(char* str) {
+    char ** tokens = str_split(str, '?'); //As vezes existem parameters ao final do link
+    int i;
+    for (i = 0; *(tokens + i); i++) {
+
+        if (str_equals(*(tokens + i), "#")) {
+            return 1;
+        }
+        int j = 0;
+        int tam = (sizeof (EXTENSIONS_PROHIBITED) / sizeof (char *));
+
+        for (j = 0; j < tam; j++) {
+            //logs(str_concat(str_concat(*(tokens + i), "\t==\t"), EXTENSIONS_PROHIBITED[j]));
+            if (str_endsWith(*(tokens + i), EXTENSIONS_PROHIBITED[j])
+                    /*|| str_endsWith(*(tokens + i), ".js")
+                    || str_endsWith(*(tokens + i), ".xml")
+                    || str_endsWith(*(tokens + i), ".ico")
+                    || str_endsWith(*(tokens + i), ".jpg")
+                    || str_endsWith(*(tokens + i), ".png")
+                    || str_endsWith(*(tokens + i), ".csp")
+                    || str_endsWith(*(tokens + i), ".do")
+                    || str_endsWith(*(tokens + i), ".jsf")
+                    || str_endsWith(*(tokens + i), ".php")*/) {//Verifico se linha é igual a # (ancora)
+                return 1;
+            }
+        }
+    }
+    return 0;
+
 }
 
 char * removeHttpFromLink(char * str) {
@@ -226,6 +410,12 @@ char * removeHttpFromLink(char * str) {
 }
 
 int parserINIT(char * name, char * path_with_filename, char * url) {
+    /*int tam = (sizeof (EXTENSIONS_PROHIBITED) / sizeof (char *)), j;
+
+    for (j = 0; j < tam; j++) {
+        logs(EXTENSIONS_PROHIBITED[j]);
+    }*/
+
     logs("------------------------------------------------------");
     logs("parseINIT()");
     DOMAIN1 = url;
@@ -251,7 +441,7 @@ int parserINIT(char * name, char * path_with_filename, char * url) {
 
     int qntd_links = 0;
     while ((read = getline(&line, &len, fp)) != -1) {
-        if (checkIfLineContainsLink(line)) {
+        if (checkIfLineContainsLink(line) || checkIfLineContainsSrc(line)) {
             qntd_links += tratarLinha(line);
         }
     }

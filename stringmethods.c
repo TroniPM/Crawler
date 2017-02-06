@@ -4,24 +4,20 @@
  *   Crowler para obter todos os links (.html/.htm) do código fonte da página.
  * AUTHOR: Paulo Mateus
  * EMAIL: paulomatew@gmail.com
- * LAST REVISED: 04/fev/17
+ * LAST REVISED: 06/fev/17
  ******************************************************************************/
 
 #include <string.h>
-//#include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
-//#include <time.h>
 #include <sys/types.h>
 #include <unistd.h>
-#include <regex.h>  
-//#include <assert.h>
+#include <regex.h>
 #include <ctype.h>
 
 #include "methods.h"
 #include "stringmethods.h"
 #include "settings.h"
-
 
 char* readfile(char *filename) {
     char *buffer = NULL;
@@ -241,33 +237,11 @@ int str_countOccurrences(char * linha, char * string2find) {
     return count;
 }
 
-/*
- return 1 if has link
- return 0 if hasn't link
- */
-int checkIfLineContainsLink(char * line) {
-    //logs("checkIfLineContainsLink()");
-    regex_t regex;
-    int reti;
-    char msgbuf[100];
-    int result;
-    /**/
-    /* Compile regular expression */
-    reti = regcomp(&regex, "href=", 0);
-    if (reti) {
-        logs("Could not compile regex");
-        return 0;
+int str_equals(char * a1, char * a2) {
+    if (strcmp(a1, a2) == 0) {
+        return 1;
     }
-
-    reti = regexec(&regex, line, 0, NULL, 0);
-    if (!reti) {
-        result = 1; //Is link
-    } else if (reti == REG_NOMATCH) {
-        result = 0; //No link
-    }
-
-    regfree(&regex);
-    return result;
+    return 0;
 }
 
 int str_endsWith(const char *str, const char *suffix) {
@@ -297,62 +271,6 @@ char * str_removeFirstCharFromString(char* str) {
     char * aux = str;
     memmove(aux, aux + 1, strlen(aux));
 
-    return aux;
-}
-
-int checkIfStringHasForbiddenEnding(char* str) {
-    char ** tokens = str_split(str, '?'); //As vezes existem parameters ao final do link
-    int i;
-    for (i = 0; *(tokens + i); i++) {
-        if (str_endsWith(*(tokens + i), ".css")
-                || str_endsWith(*(tokens + i), ".js")
-                || str_endsWith(*(tokens + i), ".xml")
-                || str_endsWith(*(tokens + i), ".ico")
-                || str_endsWith(*(tokens + i), ".jpg")
-                || str_endsWith(*(tokens + i), ".png")
-                || str_endsWith(*(tokens + i), ".csp")
-                || str_endsWith(*(tokens + i), ".do")
-                || str_endsWith(*(tokens + i), ".jsf")
-                || str_endsWith(*(tokens + i), ".php")
-                || strcmp(*(tokens + i), "#") == 0) {//Verifico se linha é igual a # (ancora)
-            return 1;
-        }
-        //        else {
-        //            return 0;
-        //        }
-
-        //free(*(tokens + i));
-    }
-    return 0;
-
-}
-
-char * tratarLink(char* link) {
-    //logs("tratarLink()");
-    char * aux = link; //str_replace(" ", "", link);
-
-    //Removendo (href=) e (data-href=) da linha
-    if (str_startsWith(aux, "data-href=")) {
-        memmove(aux, aux + 10, strlen(aux));
-    } else if (str_startsWith(aux, "href=")) {
-        memmove(aux, aux + 5, strlen(aux));
-    }
-
-    //
-    //removo aspas iniciais
-    aux = str_removeFirstCharFromString(aux);
-    //removo aspas finais
-    aux = str_removeLastCharFromString(aux);
-
-    //char * aux1;
-    //logc(aux[strlen(aux) - 1]);
-    //    if (strlen(aux) > 0) {
-    //        if (strlen(aux) == 1 && aux[0] == '#' && aux[0] == '/') {
-    //            //dummy if
-    //        } else {
-    //            //aux = addBarraAString(aux);
-    //        }
-    //    }
     return aux;
 }
 

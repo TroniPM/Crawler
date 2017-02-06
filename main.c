@@ -4,12 +4,15 @@
  *   Crowler para obter todos os links (.html/.htm) do código fonte da página.
  * AUTHOR: Paulo Mateus
  * EMAIL: paulomatew@gmail.com
- * LAST REVISED: 04/fev/17
+ * LAST REVISED: 06/fev/17
  ******************************************************************************/
 /*
  * TODO:
- * 1- Consertar bug que impede que o URL no INPUT possua / no  final
- * 2- Remover links duplicados
+ * 1- Remover links duplicados
+ *      a) salvar em um arquivo temporário todos os links (sem numeração)
+ *      b) ler arquivo temporario, salvar linhas em um array
+ *      c) fazer comparação de linha por linha se houver link repetido
+ * 2- Consertar bug que impede que o URL no INPUT possua / no  final
  */
 
 
@@ -20,45 +23,54 @@
 #include <time.h>
 #include <sys/types.h>
 #include <unistd.h>
-#include <regex.h>  
-//#include <assert.h>
+#include <regex.h>
 #include <ctype.h>
 
 #include "parser.h"
 #include "settings.h"
 #include "methods.h"
 #include "stringmethods.h"
-//#include "methods.h"
-//#include "stringmethods.h"
 
-#define NUM_THREADS 5
-//#define USE_LOCAL_INDEX_HTML 1
+#define NUM_THREADS 15
 
-//char * workspace_main_folder = "workspace_crowler";
-//char * workspace_links_folder = "/links";
+struct ObjetoThread {
+    char* url;
+    long threadid;
+};
 
-void *PrintHello(void *threadid) {
-    long tid;
-    tid = (long) threadid;
-    printf("Do stuff. Thread id: #%ld, NUMBER: %d!\n", tid, randomNumber());
-    //printf("pID: %d\n", getpid());
-
+void *newUrlScheme(void * parametro) {
+    struct ObjetoThread* obj = parametro;
+    long tid = (long) obj->threadid;
+    char * url = (char *) obj->url;
+    //printf("Do stuff. Thread id: #%ld, URL: %s:%ld!\n", tid, url, tid);
+    int i;
+    for (i = 0; i < 5; i++) {
+        printf("Do stuff. Thread id: #%ld, URL: %s:%ld!\t%d\n", tid, url, tid, i);
+    }
     pthread_exit(NULL);
 }
 
-int createThread(int argc, char *argv[]) {
+int createThread() {
+
+    /**/
+
     pthread_t threads[NUM_THREADS];
     int rc;
     long t;
+    char * txt = "www.jpcontabil.com";
     for (t = 0; t < NUM_THREADS; t++) {
+        /**/
+        struct ObjetoThread obj;
+        obj.url = "www.google.com";
+        obj.threadid = t;
+        /**/
         printf("main() creating thread: #%ld\n", t);
-        rc = pthread_create(&threads[t], NULL, PrintHello, (void *) t);
+        rc = pthread_create(&threads[t], NULL, newUrlScheme, &obj);
         if (rc) {
             printf("ERROR; return code from pthread_create() is %d\n", rc);
             exit(-1);
         }
     }
-
     pthread_exit(NULL);
 }
 
@@ -90,6 +102,7 @@ void ending() {
  * argumento 2 será o nível de procura (até 5)
  */
 int schemeMAIN(char * url, int nivel, long threadId) {
+
     logs("-----------------------------------------");
     logs("schemeMAIN()");
     printf("LOG: schemeMAIN(): THREAD_ID: %ld \tLEVEL: %d \tURL: %s\n", threadId, nivel, url);
@@ -128,6 +141,7 @@ int schemeMAIN(char * url, int nivel, long threadId) {
 }
 
 int main(int argc, char *argv[]) {
+    //createThread();
     logs("main()");
     init();
     int qntd_links = 0;
@@ -137,16 +151,22 @@ int main(int argc, char *argv[]) {
         //qntd_links = schemeMAIN("www.openbsd.org", 0, 0);
         qntd_links = schemeMAIN("www.baixaki.com.br", 0, 0);
         //qntd_links = schemeMAIN("www.superdownloads.com.br", 0, 0);
-        //        qntd_links = schemeMAIN("www.garanhuns.pe.gov.br", 0, 0);
+        //qntd_links = schemeMAIN("www.garanhuns.pe.gov.br", 0, 0);
 
     } else {
         int num = randomNumber();
         char nomeArquivo[100], path[100];
 
         sprintf(nomeArquivo, "%d%d.txt", num, getpid());
-        sprintf(path, str_concat(str_concat("./", workspace_main), "%s"), nomeArquivo);
+        //sprintf(path, str_concat(str_concat("./", workspace_main), "%s"), nomeArquivo);
 
-        qntd_links = parserINIT("indexPMG.txt", "./pags/indexPMG.html", URL_DOMAIN); //LEMBRAR DE ALTERAR URL_DOMAIN
+        //char * URL_DOMAIN = "www.baixaki.com.br";
+        //char * URL_DOMAIN = "www.superdownloads.com.br";
+        //char * URL_DOMAIN = "www.openbsd.org";
+        //char * URL_DOMAIN = "www.facebook.com";
+        char* URL_DOMAIN = "www.garanhuns.pe.gov.br";
+
+        qntd_links = parserINIT(nomeArquivo, "./pags/indexPMG.html", URL_DOMAIN); //LEMBRAR DE ALTERAR URL_DOMAIN
     }
 
     ending();

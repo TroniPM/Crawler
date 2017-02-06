@@ -1,15 +1,11 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-
-/* 
- * File:   settings.h
- * Author: matt
- *
- * Created on February 4, 2017, 4:34 PM
- */
+/******************************************************************************
+ * FILE: settings.c
+ * DESCRIPTION:
+ *   Crowler para obter todos os links (.html/.htm) do código fonte da página.
+ * AUTHOR: Paulo Mateus
+ * EMAIL: paulomatew@gmail.com
+ * LAST REVISED: 06/fev/17
+ ******************************************************************************/
 
 #ifndef SETTINGS_H
 #define SETTINGS_H
@@ -20,5 +16,9 @@ char * workspance_links;
 int PRINT_LINKS_FOUND;
 int USE_LOCAL_INDEX_HTML;
 char *URL_DOMAIN;
+int ISDEBUG;
+
+int SAVE_LINKS_OTHERDOMAINS;
+int SAVE_LINKS_OTHERFILES;
 #endif /* SETTINGS_H */
 

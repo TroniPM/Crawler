@@ -1,8 +1,11 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
+/******************************************************************************
+ * FILE: settings.c
+ * DESCRIPTION:
+ *   Crowler para obter todos os links (.html/.htm) do código fonte da página.
+ * AUTHOR: Paulo Mateus
+ * EMAIL: paulomatew@gmail.com
+ * LAST REVISED: 06/fev/17
+ ******************************************************************************/
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -12,11 +15,8 @@
 char * workspace_main = "workspace_crowler/";
 char * workspance_links = "links/";
 int PRINT_LINKS_FOUND = 0;
-int USE_LOCAL_INDEX_HTML = 0;
+int SAVE_LINKS_OTHERDOMAINS = 1;
+int SAVE_LINKS_OTHERFILES = 1;
 
-/*NÃO ESTÁ FUFNCIONANDO QUANDO PASSA LINK COM / NO FINAL (?????)*/
-//char * URL_DOMAIN = "www.baixaki.com.br";
-//char * URL_DOMAIN = "www.superdownloads.com.br";
-char * URL_DOMAIN = "www.openbsd.org";
-//char * URL_DOMAIN = "www.facebook.com";
-//char* URL_DOMAIN = "www.garanhuns.pe.gov.br";
+int USE_LOCAL_INDEX_HTML = 1;
+int ISDEBUG = 1;
