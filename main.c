@@ -8,12 +8,8 @@
  ******************************************************************************/
 /*
  * TODO:
- * 1- Fazer verificação nos links obtidos:
- *  a- Ver se são do mesmo domínio;
- *  b- Completar links que possuam apenas o nome da página (EX: about.html)->(www...com/about.html;
- *  c- Completar links que possuam apenas o folder (EX: /painel)->(www...com/painel);
- * 2- Salvar todos os links obtidos do source code e salvar em um arquivo dentro da pasta workspace.
- * 3- Pegar todos os links em todos os arquivos criados e juntá-los em um.
+ * 1- Consertar bug que impede que o URL no INPUT possua / no  final
+ * 2- Remover links duplicados
  */
 
 
@@ -31,6 +27,7 @@
 #include "parser.h"
 #include "settings.h"
 #include "methods.h"
+#include "stringmethods.h"
 //#include "methods.h"
 //#include "stringmethods.h"
 
@@ -75,94 +72,81 @@ void init() {
     // int i = system(str_concat("mkdir ", workspace_main_folder));
 
     //int j = system(str_concat(str_concat("mkdir -p ", workspace_main_folder), workspace_links_folder));
-    int i = system("mkdir workspace_crowler");
-    //int i = system("mkdir workspace_crowler");
+
+    int i = system(str_concat("mkdir ", workspace_main));
+    int j = system(str_concat("mkdir ", str_concat(workspace_main, workspance_links)));
+
 }
 
 void ending() {
-    system("rm -rf workspace_crowler");
+    int i = system("rm -rf workspace_crowler");
 
     /*if (currentURL != NULL) {
         fclose(currentURL);
     }*/
 }
 
-char* readfile(char *filename) {
-    char *buffer = NULL;
-    int string_size, read_size;
-    FILE *handler = fopen(filename, "r");
-
-    if (handler) {
-        // Seek the last byte of the file
-        fseek(handler, 0, SEEK_END);
-        // Offset from the first to the last byte, or in other words, filesize
-        string_size = ftell(handler);
-        // go back to the start of the file
-        rewind(handler);
-
-        // Allocate a string that can hold it all
-        buffer = (char*) malloc(sizeof (char) * (string_size + 1));
-
-        // Read it all in one operation
-        read_size = fread(buffer, sizeof (char), string_size, handler);
-
-        // fread doesn't set it so put a \0 in the last position
-        // and buffer is now officially a string
-        buffer[string_size] = '\0';
-
-        if (string_size != read_size) {
-            // Something went wrong, throw away the memory and set
-            // the buffer to NULL
-
-            free(buffer);
-            buffer = NULL;
-        }
-
-        // Always remember to close the file.
-        fclose(handler);
-    }
-
-    return buffer;
-}
-
 /** argumento 1 será o link
  * argumento 2 será o nível de procura (até 5)
  */
+int schemeMAIN(char * url, int nivel, long threadId) {
+    logs("-----------------------------------------");
+    logs("schemeMAIN()");
+    printf("LOG: schemeMAIN(): THREAD_ID: %ld \tLEVEL: %d \tURL: %s\n", threadId, nivel, url);
+    //URL_DOMAIN = url;
+    //logs(URL_DOMAIN);
+
+    if (nivel > 5) {
+        return 0;
+    }
+
+    int qntd = 0;
+    int num = randomNumber();
+    char nomeArquivo[100], command[100], path[100];
+
+    sprintf(nomeArquivo, "%d%d.txt", num, getpid());
+    sprintf(path, str_concat(str_concat("./", workspace_main), "%s"), nomeArquivo);
+    sprintf(command, "wget -q --output-document=%s ", path);
+    char * cfinal = str_concat(command, url);
+    logs(str_concat("COMMAND TO RUN: ", cfinal));
+
+    int res = system(cfinal); //-q não mostrar output
+
+    if (res == 0) {
+        logs("URL DOWNLOADED");
+        logs(str_concat("DOMAIN: ", url));
+        logs(str_concat("PATH: ", path));
+        logs(str_concat("FILENAME: ", nomeArquivo));
+
+        qntd = parserINIT(nomeArquivo, path, url);
+
+    } else {
+        logs(str_concat("ERROR: INVALID URL OR SERVER DOESN'T WORKING: ", url));
+    }
+
+    return qntd;
+}
+
 int main(int argc, char *argv[]) {
     logs("main()");
     init();
     int qntd_links = 0;
 
     if (USE_LOCAL_INDEX_HTML == 0) {
-        //char url[] = "www.openbsd.org";
-        //char url[] = "www.garanhuns.pe.gov.br/";
-        int num = randomNumber();
-        //logi(num);
-        char nomeArquivo[100];
-        sprintf(nomeArquivo, "./workspace_crowler/%d%d.txt", num, getpid());
-        //logs(nomeArquivo);
 
+        //qntd_links = schemeMAIN("www.openbsd.org", 0, 0);
+        qntd_links = schemeMAIN("www.baixaki.com.br", 0, 0);
+        //qntd_links = schemeMAIN("www.superdownloads.com.br", 0, 0);
+        //        qntd_links = schemeMAIN("www.garanhuns.pe.gov.br", 0, 0);
 
-        char command[100];
-        sprintf(command, "wget -q --output-document=%s ", nomeArquivo);
-
-        logs(str_concat("main() goes to run wget: ", getDomainWithBar()));
-
-        int res = system(str_concat(command, getDomainWithBar())); //-q não mostrar output
-
-        if (res == 0) {
-            logs("URL DOWNLOADED");
-            char* aux = str_concat("FILENAME AND PATH: ", nomeArquivo);
-            logs(aux);
-
-            qntd_links = parserINIT(nomeArquivo);
-
-        } else {
-            logs(str_concat("ERRO: URL INVÁLIDO OU SERVIDOR NÃO RESPONDEU DE MANEIRA INESPERADA: ", getDomainWithBar()));
-        }
     } else {
-        //qntd_links = parserINIT("indexOPENBSD.html");
-        qntd_links = parserINIT("indexPMG.html");
+        int num = randomNumber();
+        char nomeArquivo[100], path[100];
+
+        sprintf(nomeArquivo, "%d%d.txt", num, getpid());
+        sprintf(path, str_concat(str_concat("./", workspace_main), "%s"), nomeArquivo);
+
+        qntd_links = parserINIT("indexPMG.txt", "./pags/indexPMG.html", URL_DOMAIN); //LEMBRAR DE ALTERAR URL_DOMAIN
     }
 
     ending();

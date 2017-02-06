@@ -10,14 +10,20 @@
 #ifndef PARSER_H
 #define PARSER_H
 
-void openLinkFile();
-void closeLinkFile();
-void writeLinkOnFile(char *txt);
-void tratarLinha(char * linha);
-int parserINIT(char * filename);
-
-extern char* EXTENSIONS_PROHIBITED;
-extern char* EXTENSIONS_ALLOWED;
+char * getDomainWithOutBar();
+char * getDomainWithBar();
+char * completarLink(char * str);
+int checkIfLinkIsSameDomain(char * str);
+FILE* openLinkFile(char * arq);
+void closeLinkFile(FILE* arq);
+void writeLinkOnFileFinal(char *txt);
+void writeLinkOnFileOtherDomain(char *txt);
+void writeLinkOnFileOtherFiles(char *txt);
+void writeLinkOnFileWorkSpace(char *txt);
+int tratarLinha(char * linha);
+int parserINIT(char * name, char * path_with_filename, char * url);
+char * removeHttpFromLink(char * str);
+int removeDuplicatedLinks();
 
 //#ifdef __cplusplus
 //extern "C" {

@@ -15,6 +15,8 @@
 #define SETTINGS_H
 //char * EXTENSIONS_PROHIBITED[]; // = {"css", "js", "xml", "ico", "jpg", "png", "csp", "do", "jsf", "php", "gif"};
 //char * EXTENSIONS_ALLOWED[]; // = {"html", "htm"};
+char * workspace_main;
+char * workspance_links;
 int PRINT_LINKS_FOUND;
 int USE_LOCAL_INDEX_HTML;
 char *URL_DOMAIN;

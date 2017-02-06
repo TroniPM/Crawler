@@ -10,8 +10,6 @@
 #ifndef METHODS_H
 #define METHODS_H
 
-char * getDomainWithOutBar();
-char * getDomainWithBar();
 void logs(const char* txt);
 void logi(const int txt);
 void logc(const char txt);
