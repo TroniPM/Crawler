@@ -4,7 +4,6 @@
  *   Crowler para obter todos os links (.html/.htm) do código fonte da página.
  * AUTHOR: Paulo Mateus
  * EMAIL: paulomatew@gmail.com
- * LAST REVISED: 06/fev/17
  ******************************************************************************/
 
 #include <string.h>

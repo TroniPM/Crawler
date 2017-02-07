@@ -4,15 +4,10 @@
  *   Crowler para obter todos os links (.html/.htm) do código fonte da página.
  * AUTHOR: Paulo Mateus
  * EMAIL: paulomatew@gmail.com
- * LAST REVISED: 06/fev/17
  ******************************************************************************/
 /*
  * TODO:
- * 1- Remover links duplicados
- *      a) salvar em um arquivo temporário todos os links (sem numeração)
- *      b) ler arquivo temporario, salvar linhas em um array
- *      c) fazer comparação de linha por linha se houver link repetido
- * 2- Consertar bug que impede que o URL no INPUT possua / no  final
+ * 1- Consertar bug que impede que o URL no INPUT possua / no  final
  */
 
 
@@ -81,17 +76,28 @@ int randomNumber() {
 }
 
 void init() {
-    // int i = system(str_concat("mkdir ", workspace_main_folder));
-
-    //int j = system(str_concat(str_concat("mkdir -p ", workspace_main_folder), workspace_links_folder));
-
     int i = system(str_concat("mkdir ", workspace_main));
     int j = system(str_concat("mkdir ", str_concat(workspace_main, workspance_links)));
+
+    //Apagando anteriores
+    if (OVERIDE_OLD_FILES) {
+        FILE * a = fopen(FILENAME_LINKS, "w");
+        if (a != NULL)
+            fclose(a);
+        FILE * b = fopen(FILENAME_OTHERFILES, "w");
+        if (b != NULL)
+            fclose(b);
+        FILE * c = fopen(FILENAME_OTHERDOMAINS, "w");
+        if (a != NULL)
+            fclose(c);
+    }
 
 }
 
 void ending() {
-    int i = system("rm -rf workspace_crowler");
+    if (ERASE_WORKSPACE_FOLDER) {
+        int i = system("rm -rf workspace_crowler");
+    }
 
     /*if (currentURL != NULL) {
         fclose(currentURL);
@@ -124,7 +130,7 @@ int schemeMAIN(char * url, int nivel, long threadId) {
     logs(str_concat("COMMAND TO RUN: ", cfinal));
 
     int res = system(cfinal); //-q não mostrar output
-
+    //logi(res);
     if (res == 0) {
         logs("URL DOWNLOADED");
         logs(str_concat("DOMAIN: ", url));
@@ -133,8 +139,10 @@ int schemeMAIN(char * url, int nivel, long threadId) {
 
         qntd = parserINIT(nomeArquivo, path, url);
 
+    } else if (res == 32512) {
+        logs(str_concat("ERROR: SYSTEM DOESN'T SUPPORT 'wget' CALL: ", url));
     } else {
-        logs(str_concat("ERROR: INVALID URL OR SERVER DOESN'T WORKING: ", url));
+        logs(str_concat("ERROR: INVALID URL, OR SERVER DOESN'T ANSWERING, OR SYSTEM DOESN'T SUPPORT 'wget' CALL: ", url));
     }
 
     return qntd;
@@ -149,30 +157,31 @@ int main(int argc, char *argv[]) {
     if (USE_LOCAL_INDEX_HTML == 0) {
 
         //qntd_links = schemeMAIN("www.openbsd.org", 0, 0);
-        qntd_links = schemeMAIN("www.baixaki.com.br", 0, 0);
+        qntd_links = schemeMAIN("www.openbsd.org", 0, 0);
         //qntd_links = schemeMAIN("www.superdownloads.com.br", 0, 0);
         //qntd_links = schemeMAIN("www.garanhuns.pe.gov.br", 0, 0);
 
     } else {
         int num = randomNumber();
-        char nomeArquivo[100], path[100];
+        char nomeArquivo[100];
 
         sprintf(nomeArquivo, "%d%d.txt", num, getpid());
-        //sprintf(path, str_concat(str_concat("./", workspace_main), "%s"), nomeArquivo);
 
-        //char * URL_DOMAIN = "www.baixaki.com.br";
-        //char * URL_DOMAIN = "www.superdownloads.com.br";
+        char * URL_DOMAIN = "www.baixaki.com.br";
         //char * URL_DOMAIN = "www.openbsd.org";
-        //char * URL_DOMAIN = "www.facebook.com";
-        char* URL_DOMAIN = "www.garanhuns.pe.gov.br";
+        //char* URL_DOMAIN = "www.garanhuns.pe.gov.br";
+        //char * URL_DOMAIN = "www.superdownloads.com.br";
+        //char * URL_DOMAIN = "www.ufrpe.br";
+        //char * URL_DOMAIN = "en.wikipedia.org/";
 
-        qntd_links = parserINIT(nomeArquivo, "./pags/indexPMG.html", URL_DOMAIN); //LEMBRAR DE ALTERAR URL_DOMAIN
+        qntd_links = parserINIT(nomeArquivo, "./pags/indexBA.html", URL_DOMAIN);
     }
 
+    //Garantir que método seja chamado apenas pela última thread/processo
+    removeDuplicatedLinks();
+    /*READ file and re do scheme for new valid links*/
+    enumerateAndSave();
+
     ending();
-
-
-    printf("QUANTIDADE DE LINKS: %d", qntd_links);
-
     return (EXIT_SUCCESS);
 }

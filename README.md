@@ -1,33 +1,41 @@
 # Crowler
 
 The project is developed in C, an URL same domain Crowler. Specifications (for now):
-  - Only same domain
+  - Only same domain (subdomains not included)
   - Only .html and .htm extension
-  - Only 5 levels deep
-
+  - Choose remove (or not) all files fetched
+  - Only 1 level(s) deep 
+  
 In future, you'll can also:
   - Set deep level as you wish
   - Set extensions you want to get
-  - Choose remove (or not) all files fetched
 
-### Libraries ans Syscalls
+### Libraries and Syscalls your compiler/systems MUST have:
 * wget
 * PThreads
 * fork
 * execve
+
+On windows, you can install wget as "cmd.exe" command by install this [package][wget].
 
 ### Building and Running
 Do NOT forget add this parameter at your build:
 ```sh
 $ gcc -pthread...
 ```
-The output file will be saved at same source folder as "links.txt".
-### Developed By
+
+### Output
+The output can be 3 files (You can set this on/off, as change their names either, at settings.c):
+  - links_valid.txt (All valid links [no repeat])
+  - links_otherFiles.txt (All files with prohibited extensions)
+  - links_otherDomains.txt (All files with other domains [including different subdomains])
+
+### Author(s)
  - Paulo Mateus - [Twitter][PMattLink]
 
-### Development
+### Contributing
 
-Want to contribute? Great! Let me know!
+Want to contribute? Great! Let me know at this [link][contributing]!
 
 ## License
 ---
@@ -44,6 +52,8 @@ Want to contribute? Great! Let me know!
     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
     See the License for the specific language governing permissions and
     limitations under the License.
-**extreme coding, oh Yeah!**
+**extreme coding :)**
 
    [PMattLink]: <http://twitter.com/paulomatew>
+   [wget]: <http://gnuwin32.sourceforge.net/packages/wget.htm>
+   [contributing]: <https://github.com/TroniPM/Crowler/issues/new>

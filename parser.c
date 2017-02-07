@@ -4,7 +4,6 @@
  *   Crowler para obter todos os links (.html/.htm) do código fonte da página.
  * AUTHOR: Paulo Mateus
  * EMAIL: paulomatew@gmail.com
- * LAST REVISED: 04/fev/17
  ******************************************************************************/
 
 #include <string.h>
@@ -15,6 +14,7 @@
 #include <unistd.h>
 #include <regex.h>
 #include <ctype.h>
+#include <dirent.h>
 
 #include "methods.h"
 #include "stringmethods.h"
@@ -25,7 +25,7 @@ char * DOMAIN1;
 char * FILENAME;
 char * FILENAME_PATH_DOWNLOADED;
 char * FILENAME_LINK_WORKSPACE;
-char * FILENAME_LINK_FINAL;
+char * FILENAME_LINK_PRE_FINAL;
 
 char * EXTENSIONS_PROHIBITED[] = {".rb", ".rhtml", ".dll", ".cfm", ".cgi", ".svg", ".py", "jhtml", ".xhtml", ".swf", ".asp", ".aspx", ".css", ".js", ".xml", ".ico", ".jpg", ".jpeg", ".png", ".csp", ".do", ".jsf", ".jspx", ".php", ".gif"};
 char * EXTENSIONS_ALLOWED[] = {".html", ".htm"};
@@ -59,7 +59,7 @@ void writeLinkOnFileWorkSpace(char *txt) {
 
 void writeLinkOnFileFinal(char *txt) {
     //logs("writeLinkOnFile()");
-    FILE * arq = openFile(FILENAME_LINK_FINAL);
+    FILE * arq = openFile(FILENAME_LINK_PRE_FINAL);
     if (arq != NULL) {
         int ch = 0;
         int lines = 1;
@@ -70,8 +70,10 @@ void writeLinkOnFileFinal(char *txt) {
             }
         }
 
-        //logi(lines);
-        if (lines <= 9) {
+
+        fprintf(arq, "%s\n", str_trim(txt));
+
+        /*if (lines <= 9) {
             fprintf(arq, "%d     - %s\n", lines, str_trim(txt));
         } else if (lines <= 99) {
             fprintf(arq, "%d    - %s\n", lines, str_trim(txt));
@@ -81,7 +83,7 @@ void writeLinkOnFileFinal(char *txt) {
             fprintf(arq, "%d  - %s\n", lines, str_trim(txt));
         } else {
             fprintf(arq, "%d - %s\n", lines, str_trim(txt));
-        }
+        }*/
 
     }
     closeFile(arq);
@@ -89,7 +91,7 @@ void writeLinkOnFileFinal(char *txt) {
 
 void writeLinkOnFileOtherDomain(char *txt) {
     //logs("writeLinkOnFile()");
-    FILE * arq = openFile("links_otherDomains.txt");
+    FILE * arq = openFile(FILENAME_OTHERDOMAINS);
     if (arq != NULL) {
         int ch = 0;
         int lines = 1;
@@ -119,7 +121,7 @@ void writeLinkOnFileOtherDomain(char *txt) {
 
 void writeLinkOnFileOtherFiles(char *txt) {
     //logs("writeLinkOnFile()");
-    FILE * arq = openFile("links_otherFiles.txt");
+    FILE * arq = openFile(FILENAME_OTHERFILES);
     if (arq != NULL) {
         int ch = 0;
         int lines = 1;
@@ -355,7 +357,9 @@ char * tratarSrc(char* link) {
     char * aux = link; //str_replace(" ", "", link);
 
     //Removendo (href=) e (data-href=) da linha
-    if (str_startsWith(aux, "src=")) {
+    if (str_startsWith(aux, "data-src=")) {
+        memmove(aux, aux + 9, strlen(aux));
+    } else if (str_startsWith(aux, "src=")) {
         memmove(aux, aux + 4, strlen(aux));
     }
 
@@ -417,13 +421,15 @@ int parserINIT(char * name, char * path_with_filename, char * url) {
     }*/
 
     logs("------------------------------------------------------");
-    logs("parseINIT()");
+    logs(str_concat("parseINIT(): ", url));
     DOMAIN1 = url;
     FILENAME = name;
     FILENAME_PATH_DOWNLOADED = path_with_filename;
     FILENAME_LINK_WORKSPACE = str_concat(str_concat(str_concat("./", workspace_main), workspance_links), FILENAME);
-    //FILENAME_LINK_FINAL = str_concat(str_concat("./", workspace_main), FILENAME);
-    FILENAME_LINK_FINAL = "links.txt"; //str_concat(str_concat("./", workspace_main), FILENAME);
+
+    char * path = str_concat("./", str_concat(workspace_main, "links.txt"));
+
+    FILENAME_LINK_PRE_FINAL = path; //str_concat(str_concat("./", workspace_main), FILENAME);
     //logs(str_concat("parserINIT() DOMAIN: ", url));
     //logs(str_concat("parserINIT() PATH: ", path_with_filename));
     //logs(str_concat("parserINIT() FILENAME: ", name));
@@ -450,24 +456,111 @@ int parserINIT(char * name, char * path_with_filename, char * url) {
     if (line)
         free(line);
 
-    removeDuplicatedLinks();
-
     return qntd_links;
 }
 
-int removeDuplicatedLinks() {
-    char * frase = readfile(FILENAME_LINK_WORKSPACE);
+void enumerateAndSave() {
+    FILE * arq = openFile(FILENAME_LINKS);
 
-
-    char** tokens = str_split(frase, '\n');
-    int i;
-    for (i = 0; *(tokens + i); i++) {
-        writeLinkOnFileFinal(*(tokens + i));
-        free(*(tokens + i));
+    char * pathAndName = str_concat("./", str_concat(workspace_main, "links.txt"));
+    char * linhas = readfile(pathAndName);
+    if (arq != NULL && linhas != NULL) {
+        char** linhasArr = str_split(linhas, '\n');
+        int i;
+        for (i = 0; *(linhasArr + i); i++) {
+            if ((i + 1) <= 9) {
+                fprintf(arq, "%d     - %s\n", (i + 1), *(linhasArr + i));
+            } else if ((i + 1) <= 99) {
+                fprintf(arq, "%d    - %s\n", (i + 1), *(linhasArr + i));
+            } else if ((i + 1) <= 999) {
+                fprintf(arq, "%d   - %s\n", (i + 1), *(linhasArr + i));
+            } else if ((i + 1) <= 9999) {
+                fprintf(arq, "%d  - %s\n", (i + 1), *(linhasArr + i));
+            } else {
+                fprintf(arq, "%d - %s\n", (i + 1), *(linhasArr + i));
+            }
+        }
+        free(linhasArr);
     }
-    free(tokens);
 
-    return 0;
+    closeFile(arq);
+    free(linhas);
+}
+
+void removeDuplicatedLinks() {
+    logs("------------------------------------------------------");
+    logs("removeDuplicatedLinks():");
+
+    DIR *dir;
+    struct dirent *ent;
+
+    char * path = str_concat("./", str_concat(workspace_main, workspance_links));
+
+    int qntd_links = 0, links_repetidos = 0;
+
+    if ((dir = opendir(path)) != NULL) {
+        /* print all the files and directories within directory */
+        while ((ent = readdir(dir)) != NULL) {
+            if (!str_endsWith(ent->d_name, ".")) {
+                //NOVO ARQUIVO DE LINKS
+                //printf("%s\n", ent->d_name);
+                char * nome = str_concat(path, ent->d_name); //path and file name
+                //logs(str_concat("ARQUIVO: ", nome));
+
+                char * linhas = readfile(nome);
+                if (linhas != NULL) {
+                    char** linhasArr = str_split(linhas, '\n');
+
+                    int i;
+
+                    for (i = 0; *(linhasArr + i); i++) {
+                        //logs(str_concat("LINK: ", *(linhasArr + i)));
+                        qntd_links++;
+
+                        char * linhasFinal = readfile(FILENAME_LINK_PRE_FINAL);
+                        if (linhasFinal == NULL) {
+                            writeLinkOnFileFinal(*(linhasArr + i));
+                            continue;
+
+                        }
+                        char** linhasFinalArr = str_split(linhasFinal, '\n');
+                        int j, trigger = 1;
+
+                        for (j = 0; *(linhasFinalArr + j); j++) {//trigger ==1 its like a break
+                            if (str_equals(*(linhasArr + i), *(linhasFinalArr + j))) {
+                                links_repetidos++;
+                                trigger = 0;
+                            }
+                        }
+                        if (trigger) {
+                            writeLinkOnFileFinal(*(linhasArr + i));
+                        }
+                    }
+                }
+            }
+        }
+        closedir(dir);
+    } else {
+        logs("ERROR: COULDN'T GET WORKSPACE DIRECTORY");
+        /* could not open directory */
+        //perror("");
+        //return EXIT_FAILURE;
+    }
+    printf("QUANTIDADE DE LINKS VÁLIDOS ENCONTRADOS: %d\n", qntd_links);
+    printf("QUANTIDADE DE LINKS VÁLIDOS REPETIDOS: %d\n", links_repetidos);
+    printf("QUANTIDADE FINAL: %d\n", (qntd_links - links_repetidos));
+
+    /*
+        char * frase = readfile(FILENAME_LINK_PRE_FINAL);
+
+
+        char** tokens = str_split(frase, '\n');
+        int i;
+        for (i = 0; *(tokens + i); i++) {
+            writeLinkOnFileFinal(*(tokens + i));
+            free(*(tokens + i));
+        }
+        free(tokens);*/
 }
 
 char * getDomainWithOutBar() {
