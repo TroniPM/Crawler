@@ -7,7 +7,7 @@
  ******************************************************************************/
 /*
  * TODO:
- * 1- Consertar bug que impede que o URL no INPUT possua / no  final
+ * 1- Fazer threads startarem com novo link válido
  */
 
 
@@ -20,6 +20,7 @@
 #include <unistd.h>
 #include <regex.h>
 #include <ctype.h>
+#include <sys/wait.h>
 
 #include "parser.h"
 #include "settings.h"
@@ -27,6 +28,8 @@
 #include "stringmethods.h"
 
 #define NUM_THREADS 15
+
+int masterPID = -1;
 
 struct ObjetoThread {
     char* url;
@@ -98,10 +101,6 @@ void ending() {
     if (ERASE_WORKSPACE_FOLDER) {
         int i = system("rm -rf workspace_crowler");
     }
-
-    /*if (currentURL != NULL) {
-        fclose(currentURL);
-    }*/
 }
 
 /** argumento 1 será o link
@@ -109,15 +108,21 @@ void ending() {
  */
 int schemeMAIN(char * url, int nivel, long threadId) {
 
-    logs("-----------------------------------------");
-    logs("schemeMAIN()");
-    printf("LOG: schemeMAIN(): THREAD_ID: %ld \tLEVEL: %d \tURL: %s\n", threadId, nivel, url);
-    //URL_DOMAIN = url;
-    //logs(URL_DOMAIN);
-
-    if (nivel > 5) {
+    if (checkIfLinkWasDownloaded(url)) {
+        char * msgErro = "LINK JÁ FOI BAIXADO";
+        logs(str_concat(msgErro, url));
+        writeLinkOnFileNotDownloaded(msgErro, url);
+        return 0;
+    } else if (nivel > 5) {
+        char * msgErro = "PROIBIDO BAIXAR ACIMA DO NIVEL 5";
+        logs(str_concat(msgErro, url));
+        writeLinkOnFileNotDownloaded(msgErro, url);
         return 0;
     }
+
+    logs("-----------------------------------------");
+    logs("schemeMAIN()");
+    printf("LOG: schemeMAIN(): PID: %d\tTHREAD_ID: %ld \tLEVEL: %d \tURL: %s\n", getpid(), threadId, nivel, url);
 
     int qntd = 0;
     int num = randomNumber();
@@ -132,56 +137,102 @@ int schemeMAIN(char * url, int nivel, long threadId) {
     int res = system(cfinal); //-q não mostrar output
     //logi(res);
     if (res == 0) {
-        logs("URL DOWNLOADED");
-        logs(str_concat("DOMAIN: ", url));
-        logs(str_concat("PATH: ", path));
-        logs(str_concat("FILENAME: ", nomeArquivo));
+        writeLinkOnFileDownloaded(url);
 
-        qntd = parserINIT(nomeArquivo, path, url);
+        //logs("URL DOWNLOADED");
+        //logs(str_concat("DOMAIN: ", url));
+        //logs(str_concat("PATH: ", path));
+        //logs(str_concat("FILENAME: ", nomeArquivo));
+
+        char * arq = parserINIT(nomeArquivo, path, url);
+
+        //char * a = readfile(arq);
+        //printf("%s", a);
+        qntd = getLinesFromFile(arq);
+
+        repeatScheme(arq, nivel);
 
     } else if (res == 32512) {
-        logs(str_concat("ERROR: SYSTEM DOESN'T SUPPORT 'wget' CALL: ", url));
+        char * erroMsg = "ERROR: SYSTEM DOESN'T SUPPORT 'wget' CALL: ";
+        writeLinkOnFileNotDownloaded(erroMsg, url);
+        logs(str_concat(erroMsg, url));
     } else {
-        logs(str_concat("ERROR: INVALID URL, OR SERVER DOESN'T ANSWERING, OR SYSTEM DOESN'T SUPPORT 'wget' CALL: ", url));
+        char * erroMsg = "ERROR: INVALID URL, OR SERVER DOESN'T ANSWERING, OR SYSTEM DOESN'T SUPPORT 'wget' CALL: ";
+        writeLinkOnFileNotDownloaded(erroMsg, url);
+        logs(str_concat(erroMsg, url));
     }
 
     return qntd;
 }
 
+void repeatScheme(char * txt, int nv) {
+    //logi(masterPID);
+    char * full = readfile(txt);
+    if (full == NULL) {
+        return;
+    }
+    char** linhasArr = str_split(full, '\n');
+    pid_t child_pid, wpid;
+    int status = 0, i;
+
+    //Father code (before child processes start)
+    for (i = 0; *(linhasArr + i); i++) {
+        if ((child_pid = fork()) == 0) {
+            //printf("Processo filho(%d): contador=%d\n", getpid(), i);
+            schemeMAIN(*(linhasArr + i), nv + 1, 0);
+            exit(0);
+        }
+    }
+
+    while ((wpid = wait(&status)) > 0); // this way, the father waits for all the child processes 
+}
+
 int main(int argc, char *argv[]) {
-    //createThread();
     logs("main()");
     init();
     int qntd_links = 0;
 
     if (USE_LOCAL_INDEX_HTML == 0) {
+        //char * urlToUseCrowler = "www.jpcontabil.com/crowler/index.html";
+        char * urlToUseCrowler = "www.openbsd.org";
 
-        //qntd_links = schemeMAIN("www.openbsd.org", 0, 0);
-        qntd_links = schemeMAIN("www.openbsd.org", 0, 0);
+        char * workPath = str_concat(str_concat(str_concat("./", workspace_main), workspance_links), "0a.txt");
+        FILE * arq = fopen(workPath, "w+");
+        if (arq != NULL) {
+            fprintf(arq, "%s\n", urlToUseCrowler);
+            fclose(arq);
+        }
+
+
+        //qntd_links = schemeMAIN(, 0, 0);
+        qntd_links = schemeMAIN(urlToUseCrowler, 1, 0);
         //qntd_links = schemeMAIN("www.superdownloads.com.br", 0, 0);
         //qntd_links = schemeMAIN("www.garanhuns.pe.gov.br", 0, 0);
 
+        //enumerateAndSave();
+        removeDuplicatedLinksFolder();
+        enumerateAndSave();
     } else {
         int num = randomNumber();
         char nomeArquivo[100];
 
         sprintf(nomeArquivo, "%d%d.txt", num, getpid());
 
-        char * URL_DOMAIN = "www.baixaki.com.br";
+        char * URL_DOMAIN = "";
         //char * URL_DOMAIN = "www.openbsd.org";
         //char* URL_DOMAIN = "www.garanhuns.pe.gov.br";
         //char * URL_DOMAIN = "www.superdownloads.com.br";
         //char * URL_DOMAIN = "www.ufrpe.br";
         //char * URL_DOMAIN = "en.wikipedia.org/";
 
-        qntd_links = parserINIT(nomeArquivo, "./pags/indexBA.html", URL_DOMAIN);
+        qntd_links = parserINIT(nomeArquivo, "./pags/index.html", URL_DOMAIN);
+        //removeDuplicatedLinks();
+        enumerateAndSave();
     }
 
     //Garantir que método seja chamado apenas pela última thread/processo
-    removeDuplicatedLinks();
-    /*READ file and re do scheme for new valid links*/
-    enumerateAndSave();
 
+    logs("acabou");
     ending();
     return (EXIT_SUCCESS);
 }

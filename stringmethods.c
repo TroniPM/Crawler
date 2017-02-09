@@ -18,6 +18,22 @@
 #include "stringmethods.h"
 #include "settings.h"
 
+int getLinesFromFile(char * txt) {
+    int lines = 0;
+    FILE * arq = fopen(txt, "r");
+    if (arq != NULL) {
+        lines = 1;
+        int ch = 0;
+
+        while (!feof(arq)) {
+            ch = fgetc(arq);
+            if (ch == '\n' || ch == '\r') {
+                lines++;
+            }
+        }
+    }
+}
+
 char* readfile(char *filename) {
     char *buffer = NULL;
     int string_size, read_size;
@@ -133,6 +149,15 @@ char* str_replace(char *search, char *replace, char *subject) {
     return new_subject;
 }
 
+/**
+        char** arr = str_split(stringToSplit, '\n');
+        int i;
+        for (i = 0; *(arr + i); i++) {
+        }
+ * @param a_str
+ * @param a_delim
+ * @return 
+ */
 char** str_split(char* a_str, const char a_delim) {
     char** result = 0;
     size_t count = 0;

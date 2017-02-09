@@ -9,6 +9,7 @@
 #ifndef STRINGMETHODS_H
 #define STRINGMETHODS_H
 
+int getLinesFromFile(char * txt);
 int str_contains(char * original, char * tofind);
 int str_countOccurrences(char * linha, char * string2find);
 int str_endsWith(const char *str, const char *suffix);

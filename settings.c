@@ -22,8 +22,10 @@ int SAVE_LINKS_OTHERFILES = 1;
 char * FILENAME_LINKS = "links_valid.txt";
 char * FILENAME_OTHERFILES = "links_otherFiles.txt";
 char * FILENAME_OTHERDOMAINS = "links_otherDomains.txt";
+char * FILENAME_LINKS_DOWNLOADED = "downloaded.txt";
+char * FILENAME_LINKS_NOT_DOWNLOADED = "not_downloaded.txt";
 
 int ISDEBUG = 1;
 
 int OVERIDE_OLD_FILES = 1;
-int ERASE_WORKSPACE_FOLDER = 1;
+int ERASE_WORKSPACE_FOLDER = 0;
