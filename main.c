@@ -110,18 +110,20 @@ int schemeMAIN(char * url, int nivel, long threadId) {
 
     if (checkIfLinkWasDownloaded(url)) {
         char * msgErro = "LINK JÁ FOI BAIXADO";
-        logs(str_concat(msgErro, url));
+        //logs(str_concat(str_concat(msgErro, ":\t"), url));
         writeLinkOnFileNotDownloaded(msgErro, url);
         return 0;
     } else if (nivel > 5) {
         char * msgErro = "PROIBIDO BAIXAR ACIMA DO NIVEL 5";
-        logs(str_concat(msgErro, url));
+        //logs(str_concat(str_concat(msgErro, ":\t"), url));
         writeLinkOnFileNotDownloaded(msgErro, url);
         return 0;
     }
+    //writeLinkOnFileDownloaded(url); /*Tirei de depois do wget pra evitar q dois links comecem o download
+    /*ao mesmo tempo, por causa demora do download*/
 
-    logs("-----------------------------------------");
-    logs("schemeMAIN()");
+    //logs("-----------------------------------------");
+    //logs("schemeMAIN()");
     printf("LOG: schemeMAIN(): PID: %d\tTHREAD_ID: %ld \tLEVEL: %d \tURL: %s\n", getpid(), threadId, nivel, url);
 
     int qntd = 0;
@@ -132,7 +134,7 @@ int schemeMAIN(char * url, int nivel, long threadId) {
     sprintf(path, str_concat(str_concat("./", workspace_main), "%s"), nomeArquivo);
     sprintf(command, "wget -q --output-document=%s ", path);
     char * cfinal = str_concat(command, url);
-    logs(str_concat("COMMAND TO RUN: ", cfinal));
+    //logs(str_concat("COMMAND TO RUN: ", cfinal));
 
     int res = system(cfinal); //-q não mostrar output
     //logi(res);
@@ -193,6 +195,7 @@ int main(int argc, char *argv[]) {
     int qntd_links = 0;
 
     if (USE_LOCAL_INDEX_HTML == 0) {
+        //char * urlToUseCrowler = "www.jpcontabil.com/wp/";
         //char * urlToUseCrowler = "www.jpcontabil.com/crowler/index.html";
         char * urlToUseCrowler = "www.openbsd.org";
 

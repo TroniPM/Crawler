@@ -16,6 +16,7 @@ int checkIfLineContainsLink(char * line);
 int checkIfLineContainsSrc(char * line);
 int checkIfLinkIsSameDomain(char * str);
 int checkIfLinkWasDownloaded(char * link);
+int checkIfLinkHasAnchor(char * str);
 void removeDuplicatedLinks();
 void removeDuplicatedLinksFolder();
 void enumerateAndSave();

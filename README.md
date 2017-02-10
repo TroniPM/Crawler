@@ -1,13 +1,25 @@
 # Crowler
 
 The project is developed in C, an URL same domain Crowler. Specifications (for now):
-  - Only same domain (subdomains not included)
-  - Only .html and .htm extension
-  - Choose remove (or not) all files fetched
-  - Only 1 level(s) deep 
+  - Only same domain (subdomains not included);
+  - Only .html and .htm extension;
+  - Choose remove (or not) all files fetched (at settings.c)
+```c
+int OVERIDE_OLD_FILES = 1;
+int ERASE_WORKSPACE_FOLDER = 1;
+```
+  - Set deep level as you wish (at main.c)
+  ```c
+  int schemeMAIN(char * url, int nivel, long threadId){
+  ...
+  else if (nivel > 5) {
+      block further actions...
+  }
+  ...
+  }
+  ```
   
 In future, you'll can also:
-  - Set deep level as you wish
   - Set extensions you want to get
 
 ### Libraries and Syscalls your compiler/systems MUST have:
@@ -16,19 +28,41 @@ In future, you'll can also:
 * fork
 * execve
 
-On windows, you can install wget as "cmd.exe" command by install this [package][wget].
+On windows, you can install wget as `cmd.exe` command by install this [package][wget].
 
 ### Building and Running
+Add your URL at main.c, than run:
+```c
+int main(int argc, char *argv[]) {
+    ...
+    char * urlToUseCrowler = "www.openbsd.org";
+    ...
+}
+```
 Do NOT forget add this parameter at your build:
 ```sh
 $ gcc -pthread...
 ```
-
 ### Output
-The output can be 3 files (You can set this on/off, as change their names either, at settings.c):
+The output can be 3 files (You can set this on/off [default ON], as change their names either, at settings.c):
+```c
+int SAVE_LINKS_OTHERDOMAINS = 1;
+int SAVE_LINKS_OTHERFILES = 1;
+```
   - links_valid.txt (All valid links [no repeat])
   - links_otherFiles.txt (All files with prohibited extensions)
   - links_otherDomains.txt (All files with other domains [including different subdomains])
+
+A folder  will be created to help the program process (as a desktop). By default, that folder is eliminated, but you can set this OFF at settings.c:
+```c
+int ERASE_WORKSPACE_FOLDER = 1;
+```
+You can also keep the old files (`links_valid.txt`, `links_otherFiles.txt` and `links_otherDomains.txt`), and just append content at their end). At settings.c:
+```c
+int OVERIDE_OLD_FILES = 1;
+```
+# !!BE CAREFUL `<DANGER>`!!
+The entire process may lead to a memory overflow (depending of website), given the amount of child processes generated. `[TO IMPROVE]`
 
 ### Author(s)
  - Paulo Mateus - [Twitter][PMattLink]

@@ -195,6 +195,23 @@ void writeLinkOnFileOtherFiles(char *txt) {
     closeFile(arq);
 }
 
+int checkIfLinkHasAnchor(char * str) {
+    if (str_contains(str, "#")) {
+        char** arr = str_split(str, '#');
+        int i;
+        for (i = 0; *(arr + i); i++) {
+            if (str_endsWith(*(arr + i), ".html")
+                    || str_endsWith(*(arr + i), ".htm")
+                    || str_endsWith(*(arr + i), "/")) {
+                return 1;
+            }
+        }
+        return 0;
+    } else {
+        return 0;
+    }
+}
+
 int tratarLinha(char * linha) {
     //logs("tratarLinha()");
     //int qtd = str_countOccurrences(linha, " href=");//qntd de links na mesma linha
@@ -224,16 +241,21 @@ int tratarLinha(char * linha) {
 
                             //NEGAR linha para salvar links de outros domínios
                             if (checkIfLinkIsSameDomain(str)) {
-                                str = removeHttpFromLink(str);
 
-                                if (str_endsWith(str, "/"))
-                                    str = str_removeLastCharFromString(str);
-                                if (PRINT_LINKS_FOUND) {
-                                    logs(str_concat("LINK: ", str));
+                                if (!checkIfLinkHasAnchor(str)) {
+                                    str = removeHttpFromLink(str);
+
+                                    if (str_endsWith(str, "/"))
+                                        str = str_removeLastCharFromString(str);
+                                    if (PRINT_LINKS_FOUND) {
+                                        logs(str_concat("LINK: ", str));
+                                    }
+
+                                    writeLinkOnFileWorkSpace(str);
+                                    qtd++;
+                                } else {
+                                    writeLinkOnFileNotDownloaded("LINK É POSSUI UMA ÂNCORA", str);
                                 }
-
-                                writeLinkOnFileWorkSpace(str);
-                                qtd++;
                             } else {//OTHER DOMAIN
                                 if (SAVE_LINKS_OTHERDOMAINS) {
                                     str = removeHttpFromLink(str);
@@ -422,6 +444,10 @@ char * tratarSrc(char* link) {
 }
 
 int checkIfStringHasForbiddenEnding(char* str) {
+    if (str_startsWith(str, "mailto:")) {
+        return 1;
+    }
+
     char ** tokens = str_split(str, '?'); //As vezes existem parameters ao final do link
     int i;
     for (i = 0; *(tokens + i); i++) {
@@ -470,7 +496,7 @@ char * parserINIT(char * name, char * path_with_filename, char * url) {
     }*/
 
     //logs("------------------------------------------------------");
-    logs(str_concat("parseINIT(): ", url));
+    //logs(str_concat("parseINIT(): ", url));
     DOMAIN1 = url;
     FILENAME = name;
     FILENAME_PATH_DOWNLOADED = path_with_filename;
@@ -667,7 +693,12 @@ char ** getDomainAndLevels() {
         }
         return str_split(aux, '/');
     }
-    return str_split(DOMAIN1, '/');
+    if (str_contains(DOMAIN1, "/")) {
+        return str_split(DOMAIN1, '/');
+    } else {
+        return NULL;
+    }
+
 }
 
 char * getDomain() {
@@ -708,26 +739,34 @@ char * completarLink(char * str) {
         //logs(str_concat("completarLink(2) ", str));
         /*exemplo "painel/", isso quer dizer q vai direcionar pra raiz/.../painel*/
         char ** folders = getDomainAndLevels();
-        char * full = "";
-        int i;
-        for (i = 0; *(folders + i); i++) {
-            full = str_concat(full, str_concat(*(folders + i), "/"));
+        if (folders == NULL) {
+            aux = str_concat(getDomainWithBar(), aux);
+        } else {
+            char * full = "";
+            int i;
+            for (i = 0; *(folders + i); i++) {
+                full = str_concat(full, str_concat(*(folders + i), "/"));
+            }
+            aux = str_concat(full, aux);
         }
-        aux = str_concat(full, aux);
     } else if (str_endsWith(str, ".html") || str_endsWith(str, ".htm")) {
         //logs(str_concat("completarLink(3) ", str));
         /*exemplo "a.html/a.htm", isso quer dizer q vai direcionar pra raiz/.../a.html*/
         //aux = str_concat(getDomainWithBar(), aux);
         char ** folders = getDomainAndLevels();
-        char * full = "";
-        int i;
-        for (i = 0; *(folders + i); i++) {
-            //logs(*(folders + i));
+        if (folders == NULL) {
+            aux = str_concat(getDomainWithBar(), aux);
+        } else {
+            char * full = "";
+            int i;
+            for (i = 0; *(folders + i); i++) {
+                //logs(*(folders + i));
 
-            full = str_concat(full, str_concat(*(folders + i), "/"));
+                full = str_concat(full, str_concat(*(folders + i), "/"));
+            }
+
+            aux = str_concat(full, aux);
         }
-
-        aux = str_concat(full, aux);
     }
     //logs(str_concat("completarLink() ", aux));
 
