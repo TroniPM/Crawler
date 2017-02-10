@@ -12,6 +12,7 @@
 int checkIfStringHasForbiddenEnding(char* str);
 int tratarLinha(char * linha);
 char * parserINIT(char * name, char * path_with_filename, char * url);
+char * removerNiveisDiferentes(char * txt);
 int checkIfLineContainsLink(char * line);
 int checkIfLineContainsSrc(char * line);
 int checkIfLinkIsSameDomain(char * str);

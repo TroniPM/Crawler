@@ -52,6 +52,13 @@ void writeLinkOnFileNotDownloaded(char * motivo, char * link) {
 int checkIfLinkWasDownloaded(char * link) {
     char * workPath = str_concat(str_concat("./", workspace_main), FILENAME_LINKS_DOWNLOADED);
     char * full = readfile(workPath);
+
+    if (str_contains(link, "../")) {
+        char * linkAux = str_replace("../", "", link);
+        link = linkAux;
+    }
+
+
     if (full != NULL) {
         char** linhasArr = str_split(full, '\n');
         int i;
@@ -701,6 +708,60 @@ char ** getDomainAndLevels() {
 
 }
 
+char * removerNiveisDiferentes(char * txt) {
+    //logs(str_concat("removerNiveisDiferentes() ", txt));
+    if (!str_contains(txt, "../")) {
+        return txt;
+    }
+
+    char * aux = "";
+    char * auxN = txt; // = txt;
+    char **tokens;
+    size_t numtokens;
+
+    int qntd = str_countOccurrences(txt, "../"), x;
+    //logi(qntd);
+    tokens = split(auxN, "/", &numtokens); //PRA PODER PEGAR o NUM
+    //logi((int) numtokens);
+    //int test = ((int) numtokens) + 2 - qntd;
+    //logi(test);
+
+    int x1 = 4, xS = 2, xAux;
+    for (xAux = 1; xAux < qntd; xAux++) {
+        x1 += xS;
+    }
+    //printf("TEM Q TER %d\n", x1);
+
+
+
+
+    if ((int) numtokens >= x1) {
+        for (x = 0; x < qntd; x++) {
+            tokens = split(auxN, "/", &numtokens);
+            aux = "";
+            int ctrl = 1, xx = (int) numtokens, i;
+
+            for (i = 0; i < xx; i++) {
+                if (i + 1 == xx) {
+                    //dummy if
+                    aux = str_concat(aux, tokens [i]);
+                } else if (str_equals(tokens[i + 1], "..") && ctrl) {
+                    ctrl = 0;
+                    i++;
+                    continue;
+
+                } else {
+                    aux = str_concat(aux, str_concat(tokens [i], "/"));
+                }
+            }
+            auxN = aux;
+        }
+    } else {
+        return txt;
+    }
+    return aux;
+}
+
 char * getDomain() {
     //logs("getDomain()");
     char** link = str_split(getDomainWithBar(), '/');
@@ -769,6 +830,7 @@ char * completarLink(char * str) {
         }
     }
     //logs(str_concat("completarLink() ", aux));
+    aux = removerNiveisDiferentes(aux);
 
     return aux;
 }

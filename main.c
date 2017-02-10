@@ -179,17 +179,42 @@ void repeatScheme(char * txt, int nv) {
 
     //Father code (before child processes start)
     for (i = 0; *(linhasArr + i); i++) {
-        if ((child_pid = fork()) == 0) {
-            //printf("Processo filho(%d): contador=%d\n", getpid(), i);
-            schemeMAIN(*(linhasArr + i), nv + 1, 0);
-            exit(0);
+        if (!checkIfLinkWasDownloaded(*(linhasArr + i))) {//Se link já foi baixado, nem crio um novo processo
+            if ((child_pid = fork()) == 0) {
+                //printf("Processo filho(%d): contador=%d\n", getpid(), i);
+                schemeMAIN(*(linhasArr + i), nv + 1, 0);
+                exit(0);
+            }
+        } else {
+            char * msgErro = "LINK JÁ FOI BAIXADO";
+            //logs(str_concat(str_concat(msgErro, ":\t"), url));
+            writeLinkOnFileNotDownloaded(msgErro, *(linhasArr + i));
         }
     }
 
     while ((wpid = wait(&status)) > 0); // this way, the father waits for all the child processes 
 }
 
+int teste() {
+    char *line = NULL;
+    size_t linelen;
+    char **tokens;
+    size_t numtokens;
+
+    tokens = split("www.openbsd.org/A/B/C/D/../../../../index.html", "/", &numtokens);
+    for (size_t i = 0; i < numtokens; i++) {
+        printf("    token: \"%s\"\n", tokens[i]);
+        free(tokens[i]);
+    }
+    if (line != NULL) free(line);
+    return EXIT_SUCCESS;
+}
+
 int main(int argc, char *argv[]) {
+    //logs(removerNiveisDiferentes("www.openbsd.org/A/../../index.html"));
+    //exit(0);
+
+
     logs("main()");
     init();
     int qntd_links = 0;
@@ -235,7 +260,7 @@ int main(int argc, char *argv[]) {
 
     //Garantir que método seja chamado apenas pela última thread/processo
 
-    logs("acabou");
+    //logs("acabou");
     ending();
     return (EXIT_SUCCESS);
 }
