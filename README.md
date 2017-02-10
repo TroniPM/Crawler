@@ -9,15 +9,15 @@ int OVERIDE_OLD_FILES = 1;
 int ERASE_WORKSPACE_FOLDER = 1;
 ```
   - Set deep level as you wish (at main.c)
-  ```c
-  int schemeMAIN(char * url, int nivel, long threadId){
-  ...
-  else if (nivel > 5) {
-      block further actions...
-  }
-  ...
-  }
-  ```
+```c
+int schemeMAIN(char * url, int nivel, long threadId){
+    ...
+    else if (nivel > 5) {
+        block further actions...
+    }
+    ...
+}
+```
   
 In future, you'll can also:
   - Set extensions you want to get
