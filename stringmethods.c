@@ -185,7 +185,7 @@ char **split(const char* str, const char* delim, size_t* numtokens) {
     // implement a dynamically-growing array
     size_t tokens_alloc = 1;
     size_t tokens_used = 0;
-    char **tokens = calloc(tokens_alloc, sizeof(char*));
+    char **tokens = calloc(tokens_alloc, sizeof (char*));
     char *token, *strtok_ctx;
     for (token = strtok_r(s, delim, &strtok_ctx);
             token != NULL;
@@ -193,7 +193,7 @@ char **split(const char* str, const char* delim, size_t* numtokens) {
         // check if we need to allocate more space for tokens
         if (tokens_used == tokens_alloc) {
             tokens_alloc *= 2;
-            tokens = realloc(tokens, tokens_alloc * sizeof(char*));
+            tokens = realloc(tokens, tokens_alloc * sizeof (char*));
         }
         tokens[tokens_used++] = strdup(token);
     }
@@ -202,12 +202,13 @@ char **split(const char* str, const char* delim, size_t* numtokens) {
         free(tokens);
         tokens = NULL;
     } else {
-        tokens = realloc(tokens, tokens_used * sizeof(char*));
+        tokens = realloc(tokens, tokens_used * sizeof (char*));
     }
     *numtokens = tokens_used;
     free(s);
     return tokens;
 }
+
 /**
         char** arr = str_split(stringToSplit, '\n');
         int i;
