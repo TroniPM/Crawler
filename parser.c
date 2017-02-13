@@ -27,6 +27,8 @@ char * FILENAME_PATH_DOWNLOADED;
 char * FILENAME_LINK_WORKSPACE;
 char * FILENAME_LINK_PRE_FINAL;
 
+void writeLinkOnFileNotDownloaded(char * motivo, char * link);
+
 FILE* openFile(char * arq) {
     return fopen(arq, "a+");
 }
@@ -77,21 +79,64 @@ void writeLinkOnFileDownloaded(char *txt) {
     closeFile(arq);
 }
 
-void writeLinkOnFileWorkSpace(char *txt) {
-    //logs("writeLinkOnFile()");
-    FILE * arq = openFile(FILENAME_LINK_WORKSPACE);
-    if (arq != NULL) {
-        int ch = 0;
-        int lines = 1;
-        while (!feof(arq)) {
-            ch = fgetc(arq);
-            if (ch == '\n' || ch == '\r') {
-                lines++;
+void writeAndEnumerate(char * link) {
+    //logs(str_concat("writeAndEnumerate() INICIO ", link));
+    char * linhasFinal = readfile(FILENAME_LINKS);
+    //logs("AE");
+    if (linhasFinal == NULL) {
+        FILE * arq = openFile(FILENAME_LINKS);
+        if (arq != NULL) {
+            fprintf(arq, "1 - %s\n", str_trim(link));
+            closeFile(arq);
+        }
+    }
+
+    char** arr = str_split(linhasFinal, '\n');
+
+    if (arr == NULL) {
+        FILE * arq = openFile(FILENAME_LINKS);
+        if (arq != NULL) {
+            fprintf(arq, "1 - %s\n", str_trim(link));
+            closeFile(arq);
+        }
+    }
+
+    if (linhasFinal != NULL && arr != NULL) {
+        int j, boolean = 1;
+        for (j = 0; *(arr + j); j++) {
+            char ** linha = str_split(*(arr + j), '-');
+            if (linha != NULL && *(linha + 1)) {
+                //printf("%s == %s\n", link, str_trim(*(linha + 1)));
+                if (str_equals(link, str_trim(*(linha + 1)))) {
+                    boolean = 0;
+                }
             }
         }
+        if (boolean) {
+            FILE * arq = openFile(FILENAME_LINKS);
+            if (arq != NULL) {
+                fprintf(arq, "%d - %s\n", (j + 1), str_trim(link));
+                closeFile(arq);
+            }
+        }
+    }
+}
 
-        //logi(lines);
+void writeLinkOnFileWorkSpace(char *txt) {
+    //logs("writeLinkOnFileWorkSpace()");
+    //FILE * arq = openFile(FILENAME_LINK_WORKSPACE);
+    FILE * arq = openFile(FILENAME_LINK_WORKSPACE);
+    if (arq != NULL) {
         fprintf(arq, "%s\n", str_trim(txt));
+
+        //        char * string = readfile(FILENAME_LINK_WORKSPACE);
+        //        char ** arr = str_split(string, '\n');
+        //        int i;
+        //        for (i = 0; *(arr + i); i++) {
+        //
+        //        }
+        //
+        //        fprintf(arq, "%d -> %s\n", (i + 1), str_trim(txt));
     }
     closeFile(arq);
 }
@@ -248,6 +293,7 @@ int tratarLinha(char * linha) {
                                     }
 
                                     writeLinkOnFileWorkSpace(str);
+                                    writeAndEnumerate(str);
                                     qtd++;
                                 } else {
                                     writeLinkOnFileNotDownloaded("LINK É POSSUI UMA ÂNCORA", str);
@@ -446,7 +492,7 @@ int checkIfStringHasForbiddenEnding(char* str) {
     }
 
     char ** tokens = str_split(str, '?'); //As vezes existem parameters ao final do link
-    
+
     char ** extensoes = getExtensionsProhibited();
     int i, j;
     for (i = 0; *(tokens + i); i++) {
@@ -465,7 +511,7 @@ int checkIfStringHasForbiddenEnding(char* str) {
         /*Se chegar até aqui, significa que não encontrou extensões proibidas.
         Então se não encontrar as extensões PERMITIDAS, será bloqueado.*/
         if (EXPLICIT) {
-            
+
             for (j = 0; j < getExtensionsAllowedSize(); j++) {
                 if (str_endsWith(*(tokens + i), getExtensionsAllowed()[j])) {
                     return 0;
@@ -532,7 +578,7 @@ char * parserINIT(char * name, char * path_with_filename, char * url) {
     fclose(fp);
     if (line)
         free(line);
-    removeDuplicatedLinks();
+    //removeDuplicatedLinks();
 
     return FILENAME_LINK_WORKSPACE;
 }
@@ -602,7 +648,6 @@ void removeDuplicatedLinks() {
             writeLinkOnFileWorkSpace(*(linhasArr + i));
         }
     }
-    return qtd;
 }
 
 void removeDuplicatedLinksFolder() {

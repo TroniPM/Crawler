@@ -25,9 +25,12 @@
 
 #define NUM_THREADS 15
 
-int masterPID = -1;
-
+void repeatScheme(char * txt, int nv);
+void writeLinkOnFileNotDownloaded(char * motivo, char * link);
 void printHelp();
+void forkCreated();
+
+int masterPID = -1;
 
 struct ObjetoThread {
     char* url;
@@ -135,29 +138,17 @@ int schemeMAIN(char * url, int nivel, long threadId) {
     char * cfinal = str_concat(command, url);
     //logs(str_concat("COMMAND TO RUN: ", cfinal));
 
-    int res = system(cfinal); //-q não mostrar output
-    //logi(res);
+    int res = system(cfinal);
+
     if (res == 0) {
         writeLinkOnFileDownloaded(url);
 
-        //logs("URL DOWNLOADED");
-        //logs(str_concat("DOMAIN: ", url));
-        //logs(str_concat("PATH: ", path));
-        //logs(str_concat("FILENAME: ", nomeArquivo));
-
         char * arq = parserINIT(nomeArquivo, path, url);
 
-        //char * a = readfile(arq);
-        //printf("%s", a);
         qntd = getLinesFromFile(arq);
 
         repeatScheme(arq, nivel);
 
-    } else if (res == 32512) {
-        char * erroMsg = "ERROR: SYSTEM DOESN'T SUPPORT 'wget' CALL: ";
-        writeLinkOnFileDownloaded(url);
-        writeLinkOnFileNotDownloaded(erroMsg, url);
-        logs(str_concat(erroMsg, url));
     } else {
         char * erroMsg = "ERROR: INVALID URL, OR SERVER DOESN'T ANSWERING, OR SYSTEM DOESN'T SUPPORT 'wget' CALL: ";
         writeLinkOnFileDownloaded(url);
@@ -227,14 +218,12 @@ void abortingCauseByParameter(char * param) {
 int main(int argc, char *argv[]) {
     //1 - COLOCAR EXECL
     //1.2 - PASSAR NIVEL ATUAL POR UM PARAMETRO NO INPUT (-nv=NUM)
-    //2 - COLOCAR PRA A MEDIDA QUE ACHAR NOVOS LINKS, ADICIONÁ-LOS JÁ NO ARQUIVO FINAL (VERIFICAR SE JÁ EXISTE) E NUMERÁ-LOS
 
     //check for help
     char * urlToUseCrowler;
     if (1 == 1) {
         if (argv[1] != NULL && str_equals("--help", str_toLowerCase(argv[1]))) {
             printHelp();
-            exit(0);
         }
         int ai;
         urlToUseCrowler = "";
@@ -311,7 +300,6 @@ int main(int argc, char *argv[]) {
 
         if (!required) {
             printHelp();
-            exit(0);
         }
     }
     //logs(argv[1]);
@@ -346,8 +334,8 @@ int main(int argc, char *argv[]) {
 
         qntd_links = schemeMAIN(urlToUseCrowler, 1, 0);
 
-        removeDuplicatedLinksFolder();
-        enumerateAndSave();
+        //removeDuplicatedLinksFolder();
+        //enumerateAndSave();
     }
     //    } else {
     //        int num = randomNumber();
@@ -423,4 +411,6 @@ void printHelp() {
     printf(" 5- The parameters order does not matters.\n");
     printf(" 6- Press CTRL+C to quit the process.\n");
     printf(" 7- The entire process may take long time. We advise you to drink some coffee and play a bit at your smartphone.\n\n");
+
+    exit(0);
 }
