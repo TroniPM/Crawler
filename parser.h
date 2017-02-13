@@ -1,7 +1,7 @@
 /******************************************************************************
  * FILE: parser.h
  * DESCRIPTION:
- *   Crowler para obter todos os links (.html/.htm) do código fonte da página.
+ *   Crowler to map whole website (webpages, imagens, style files, etc).
  * AUTHOR: Paulo Mateus
  * EMAIL: paulomatew@gmail.com
  ******************************************************************************/
@@ -11,8 +11,6 @@
 
 int checkIfStringHasForbiddenEnding(char* str);
 int tratarLinha(char * linha);
-char * parserINIT(char * name, char * path_with_filename, char * url);
-char * removerNiveisDiferentes(char * txt);
 int checkIfLineContainsLink(char * line);
 int checkIfLineContainsSrc(char * line);
 int checkIfLinkIsSameDomain(char * str);
@@ -27,6 +25,8 @@ void writeLinkOnFileOtherDomain(char *txt);
 void writeLinkOnFileOtherFiles(char *txt);
 void writeLinkOnFileWorkSpace(char *txt);
 void writeLinkOnFileDownloaded(char *txt);
+char * parserINIT(char * name, char * path_with_filename, char * url);
+char * removerNiveisDiferentes(char * txt);
 char * getDomain();
 char * getDomainWithOutBar();
 char * getDomainWithBar();

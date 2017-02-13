@@ -1,15 +1,10 @@
 /******************************************************************************
  * FILE: main.c
  * DESCRIPTION:
- *   Crowler para obter todos os links (.html/.htm) do código fonte da página.
+ *   Crowler to map whole website (webpages, imagens, style files, etc).
  * AUTHOR: Paulo Mateus
  * EMAIL: paulomatew@gmail.com
  ******************************************************************************/
-/*
- * TODO:
- * 1- Fazer threads startarem com novo link válido
- */
-
 
 #include <string.h>
 #include <pthread.h>
@@ -232,16 +227,8 @@ void abortingCauseByParameter(char * param) {
 int main(int argc, char *argv[]) {
     //1 - COLOCAR EXECL
     //1.2 - PASSAR NIVEL ATUAL POR UM PARAMETRO NO INPUT (-nv=NUM)
-    //2 - ADICIONAR PARÂMETRO CHAMADO --explicit: SÓ IRÁ MAPEAR URL SE TIVER FINAL COM EXTENSÃO
-    //    ASSIM, SE URL TIVER google.com/painel, NÃO IRÁ MAPEAR.
-    //3 - CORRIGIR BUG SE PASSAR LINK SEM EXTENSÃO DEFINIDA (jpcontabil.com/crowler dá erro)
-    //4 - COLOCAR PRA A MEDIDA QUE ACHAR NOVOS LINKS, ADICIONÁ-LOS JÁ NO ARQUIVO FINAL (VERIFICAR SE JÁ EXISTE) E NUMERÁ-LOS
+    //2 - COLOCAR PRA A MEDIDA QUE ACHAR NOVOS LINKS, ADICIONÁ-LOS JÁ NO ARQUIVO FINAL (VERIFICAR SE JÁ EXISTE) E NUMERÁ-LOS
 
-    //    char * EXTENSIONS_ALLOWED[] = {".html", ".htm", "AEE", "AEEAEAEA"};
-    //    int t = (sizeof (EXTENSIONS_ALLOWED) / sizeof (char *));
-    //    logi(t);
-    //    exit(0);
-    //    logi(argc);
     //check for help
     char * urlToUseCrowler;
     if (1 == 1) {
@@ -277,20 +264,33 @@ int main(int argc, char *argv[]) {
             } else if (str_startsWith(argv[ai], "-ext=")) {
                 char * l = argv[ai];
                 memmove(l, l + 5, strlen(l));
-                logs(str_concat("EXTENSOES: ", l));
+                //logs(str_concat("EXTENSOES: ", l));
                 if (str_contains(l, ",")) {
                     char** arr = str_split(l, ',');
-                    int i;
-                    for (i = 0; *(arr + i); i++) {
-                        *(arr + i) = str_concat(".", *(arr + i));
+
+                    char ** newArray;
+                    int i, i1;
+                    for (i1 = 0; *(arr + i1); i1++) {
                     }
 
-                    setExtensionsAllowed(arr);
+
+                    newArray = malloc(i1 * sizeof (char*));
+                    for (i = 0; i < i1; ++i) {
+                        newArray[i] = (char *) malloc(10);
+                    }
+                    for (i = 0; *(arr + i); i++) {
+                        *(newArray + i) = str_concat(".", *(arr + i));
+                        //logs(*(newArray + i));
+                    }
+                    //logi(i1);
+
+                    setExtensionsAllowed(newArray, i1);
                 } else {
-                    char** arr = str_split(l, ',');
-                    setExtensionsAllowed(arr);
+                    char* arr[] = {str_concat(".", l)}; //str_split(l, ',');
+                    setExtensionsAllowed(arr, 1);
                 }
 
+                //logs("NO FIM DO IF2");
             } else if (str_startsWith(argv[ai], "--noerase")) {
                 ERASE_WORKSPACE_FOLDER = 0;
             } else if (str_startsWith(argv[ai], "--explicit")) {
@@ -298,34 +298,22 @@ int main(int argc, char *argv[]) {
             }
         }
 
-        //    int tam = (sizeof (getExtensionsAllowed()) / sizeof (char *)), i1;
-        //    char ** extensoes = getExtensionsAllowed();
-        //    for (i1 = 0; *(extensoes + i1); i1++) {
-        //        printf("-->EXTENSOES ALLOWED[%d]: %s\n", i1, *(extensoes + i1));
-        //    }
-        //    tam = (sizeof (getExtensionsProhibited()) / sizeof (char *));
-        //    extensoes = getExtensionsProhibited();
-        //    for (i1 = 0; *(extensoes + i1); i1++) {
-        //        printf("-->EXTENSOES PROHIBITED[%d]: %s\n", i1, *(extensoes + i1));
-        //    }
 
-
-
-
+        //        char ** extensoes = getExtensionsAllowed();
+        //        int tam = getExtensionsAllowedSize(), i1;
+        //        for (i1 = 0; i1 < getExtensionsAllowedSize(); i1++) {
+        //            printf("-->EXTENSOES ALLOWED[%d]: %s\n", i1, extensoes[i1]);
+        //        }
+        //        extensoes = getExtensionsProhibited();
+        //        for (i1 = 0; i1 < getExtensionsProhibitedSize(); i1++) {
+        //            printf("-->EXTENSOES PROHIBITED[%d]: %s\n", i1, *(extensoes + i1));
+        //        }
 
         if (!required) {
             printHelp();
             exit(0);
         }
     }
-
-    //    logs("LEVEL_ALLOWED");
-    //    logi(LEVEL_ALLOWED);
-    //    logs("ERASE_WORKSPACE_FOLDER");
-    //    logi(ERASE_WORKSPACE_FOLDER);
-    //    logs("urlToUseCrowler");
-    //    logs(urlToUseCrowler);
-
     //logs(argv[1]);
     //execl("./crowler1", NULL);
     //execl("cd /dist/Debug/GNU-Linux/ && ./crowler1", NULL);
@@ -416,7 +404,7 @@ void printHelp() {
     printf("\tnoerase*         | if you use this, all files (pages) catched\n");
     printf("\t                   will be available to you inside a folder\n");
     printf("\t                   named 'workspace_crowler'.\n\n");
-    printf("\texplicit* [NOT_WORKING_YET] | if you use this, the crowler only will map \n");
+    printf("\texplicit*        | if you use this, the crowler only will map \n");
     printf("\t                   pages with explicit extensions. Example: \n");
     printf("\t                   'www.openbsd.org/panel' won't be mapped.\n");
     printf("\t                   'www.openbsd.org/panel/index.html' will be mapped.\n\n");

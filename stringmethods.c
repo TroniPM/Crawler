@@ -1,7 +1,7 @@
 /******************************************************************************
  * FILE: stringmethods.c
  * DESCRIPTION:
- *   Crowler para obter todos os links (.html/.htm) do código fonte da página.
+ *   Crowler to map whole website (webpages, imagens, style files, etc).
  * AUTHOR: Paulo Mateus
  * EMAIL: paulomatew@gmail.com
  ******************************************************************************/
@@ -164,13 +164,13 @@ char* str_replace(char *search, char *replace, char *subject) {
 }
 
 /**
- char **tokens;
- size_t numtokens;
- tokens = strsplit(line, ", \t\n", &numtokens);
-        for (size_t i = 0; i < numtokens; i++) {
-            printf("    token: \"%s\"\n", tokens[i]);
-            free(tokens[i]);
-        }
+    char **tokens;
+    size_t numtokens;
+    tokens = split(line, ", \t\n", &numtokens);
+    for (size_t i = 0; i < numtokens; i++) {
+        printf("    token: \"%s\"\n", tokens[i]);
+        free(tokens[i]);
+    }
  * @param str
  * @param delim
  * @param numtokens
@@ -210,10 +210,10 @@ char **split(const char* str, const char* delim, size_t* numtokens) {
 }
 
 /**
-        char** arr = str_split(stringToSplit, '\n');
-        int i;
-        for (i = 0; *(arr + i); i++) {
-        }
+    char** arr = str_split(stringToSplit, '\n');
+    int i;
+    for (i = 0; *(arr + i); i++) {
+    }
  * @param a_str
  * @param a_delim
  * @return 

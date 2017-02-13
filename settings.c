@@ -1,7 +1,7 @@
 /******************************************************************************
  * FILE: settings.c
  * DESCRIPTION:
- *   Crowler para obter todos os links (.html/.htm) do código fonte da página.
+ *   Crowler to map whole website (webpages, imagens, style files, etc).
  * AUTHOR: Paulo Mateus
  * EMAIL: paulomatew@gmail.com
  ******************************************************************************/
@@ -12,34 +12,30 @@
 #include "stringmethods.h"
 #include "settings.h"
 
-int USE_LOCAL_INDEX_HTML = 0;
-
-char * workspace_main = "workspace_crowler/";
-char * workspance_links = "links/";
-
-int PRINT_LINKS_FOUND = 0;
-
-int SAVE_LINKS_OTHERDOMAINS = 1;
-int SAVE_LINKS_OTHERFILES = 1;
 
 char * FILENAME_LINKS = "links_valid.txt";
 char * FILENAME_OTHERFILES = "links_otherFiles.txt";
 char * FILENAME_OTHERDOMAINS = "links_otherDomains.txt";
 char * FILENAME_LINKS_DOWNLOADED = "downloaded.txt";
 char * FILENAME_LINKS_NOT_DOWNLOADED = "not_downloaded.txt";
-
+char * workspace_main = "workspace_crowler/";
+char * workspance_links = "links/";
+int USE_LOCAL_INDEX_HTML = 0;
+int PRINT_LINKS_FOUND = 0;
+int SAVE_LINKS_OTHERDOMAINS = 1;
+int SAVE_LINKS_OTHERFILES = 1;
 int ISDEBUG = 1;
-
 int OVERIDE_OLD_FILES = 1;
+int EXTENSION_ALLOWED_SIZE = 2;
+int EXTENSION_PROHIBITED_SIZE = 25;
+int customExtensions = 0;
 
 /*SETTEBLE PARAMETERS FORM COMMAND LINE*/
+int EXPLICIT = 0;
 int ERASE_WORKSPACE_FOLDER = 1;
 int LEVEL_ALLOWED = 5;
 
-int customExtensions = 0;
-
 //SEMPRE ADICINOAR EXTENSOES NO ARRAY ALL E NO ARRAY "FIXO"
-int EXPLICIT = 0;
 char * EXTENSIONS_ALL[] = {".html", ".htm", ".rb", ".rhtml", ".dll", ".cfm", ".cgi", ".svg", ".py", "jhtml", ".xhtml", ".swf", ".asp", ".aspx", ".css", ".js", ".xml", ".ico", ".jpg", ".jpeg", ".png", ".csp", ".do", ".jsf", ".jspx", ".php", ".gif"};
 char * EXTENSIONS_PROHIBITED[] = {".rb", ".rhtml", ".dll", ".cfm", ".cgi", ".svg", ".py", "jhtml", ".xhtml", ".swf", ".asp", ".aspx", ".css", ".js", ".xml", ".ico", ".jpg", ".jpeg", ".png", ".csp", ".do", ".jsf", ".jspx", ".php", ".gif"};
 char ** EXTENSIONS_PROHIBITED_CUSTOM;
@@ -53,19 +49,29 @@ char ** getExtensionsAllowed() {
         return EXTENSIONS_ALLOWED_CUSTOM;
 }
 
-void setExtensionsAllowed(char ** newArray) {
-    customExtensions = 1;
-    int i;
-    for (i = 0; *(newArray + i); i++) {
-    }
-    EXTENSIONS_ALLOWED_CUSTOM = malloc(i * sizeof (char*));
+int getExtensionsAllowedSize() {
+    return EXTENSION_ALLOWED_SIZE;
+}
 
-    for (i = 0; *(newArray + i); i++) {
-        EXTENSIONS_ALLOWED_CUSTOM[i] = *(newArray + i);
+int getExtensionsProhibitedSize() {
+    return EXTENSION_PROHIBITED_SIZE;
+}
+
+void setExtensionsAllowed(char ** newArray, int tamanho) {
+    //logs("setExtensionsAllowed");
+    customExtensions = 1;
+    EXTENSION_ALLOWED_SIZE = tamanho;
+    int i;
+    char ** arr = newArray;
+
+    EXTENSIONS_ALLOWED_CUSTOM = malloc(tamanho * sizeof (char*));
+
+    for (i = 0; i < tamanho; i++) {
+        EXTENSIONS_ALLOWED_CUSTOM[i] = arr[i];
     }
 
     //SEMPRE IRÁ ADICIONAR AS EXTENSÕES RESTANTES AO ARRAY DE EXTENSÕES PROIBIDAS
-    setExtensionsProhibited();
+    setExtensionsProhibited(tamanho);
 }
 
 char ** getExtensionsProhibited() {
@@ -75,19 +81,22 @@ char ** getExtensionsProhibited() {
         return EXTENSIONS_PROHIBITED_CUSTOM;
 }
 
-void setExtensionsProhibited() {
-    int i, j, index = 0, tamFinal = (sizeof (EXTENSIONS_ALL) / sizeof (char *)) - (sizeof (getExtensionsAllowed()) / sizeof (char *));
+void setExtensionsProhibited(int tamanho) {
+    int i, j, index = 0, boolean;
+    char ** extensoes = getExtensionsAllowed();
+
     int tamAll = (sizeof (EXTENSIONS_ALL) / sizeof (char *));
 
+    int tamFinal = tamAll - tamanho;
+    EXTENSION_PROHIBITED_SIZE = tamFinal;
 
     EXTENSIONS_PROHIBITED_CUSTOM = malloc(tamFinal * sizeof (char*));
+
     for (i = 0; i < tamAll; i++) {
+        boolean = 1;
 
-        char ** extensoes = getExtensionsAllowed();
-        int boolean = 1;
-
-        for (j = 0; *(extensoes + j); j++) {
-
+        for (j = 0; j < tamanho; j++) {
+            //printf("%s == %s\n", EXTENSIONS_ALL[i], *(extensoes + j));
             if (!str_equals(EXTENSIONS_ALL[i], *(extensoes + j))) {
                 boolean = 1;
             } else {

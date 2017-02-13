@@ -1,7 +1,7 @@
 /******************************************************************************
  * FILE: methods.h
  * DESCRIPTION:
- *   Crowler para obter todos os links (.html/.htm) do código fonte da página.
+ *   Crowler to map whole website (webpages, imagens, style files, etc).
  * AUTHOR: Paulo Mateus
  * EMAIL: paulomatew@gmail.com
  ******************************************************************************/

@@ -1,14 +1,13 @@
 /******************************************************************************
  * FILE: methods.c
  * DESCRIPTION:
- *   Crowler para obter todos os links (.html/.htm) do código fonte da página.
+ *   Crowler to map whole website (webpages, imagens, style files, etc).
  * AUTHOR: Paulo Mateus
  * EMAIL: paulomatew@gmail.com
  ******************************************************************************/
 
 #include <stdio.h>
 #include <stdlib.h>
-//#include "methods.h"
 #include "settings.h"
 
 void logs(const char* txt) {

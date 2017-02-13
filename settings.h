@@ -1,7 +1,7 @@
 /******************************************************************************
- * FILE: settings.c
+ * FILE: settings.h
  * DESCRIPTION:
- *   Crowler para obter todos os links (.html/.htm) do código fonte da página.
+ *   Crowler to map whole website (webpages, imagens, style files, etc).
  * AUTHOR: Paulo Mateus
  * EMAIL: paulomatew@gmail.com
  ******************************************************************************/
@@ -19,6 +19,8 @@ char * FILENAME_OTHERDOMAINS;
 char * FILENAME_LINKS_DOWNLOADED;
 char * FILENAME_LINKS_NOT_DOWNLOADED;
 char * URL_DOMAIN;
+int getExtensionsAllowedSize();
+int getExtensionsProhibitedSize();
 int PRINT_LINKS_FOUND;
 int USE_LOCAL_INDEX_HTML;
 int ISDEBUG;
@@ -28,8 +30,8 @@ int OVERIDE_OLD_FILES;
 int ERASE_WORKSPACE_FOLDER;
 int LEVEL_ALLOWED;
 int EXPLICIT;
-void setExtensionsAllowed(char ** newArray);
-void setExtensionsProhibited();
+void setExtensionsAllowed(char ** newArray, int tamanho);
+void setExtensionsProhibited(int tamanho);
 
 #endif /* SETTINGS_H */
 
