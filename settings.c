@@ -39,6 +39,7 @@ int LEVEL_ALLOWED = 5;
 int customExtensions = 0;
 
 //SEMPRE ADICINOAR EXTENSOES NO ARRAY ALL E NO ARRAY "FIXO"
+int EXPLICIT = 0;
 char * EXTENSIONS_ALL[] = {".html", ".htm", ".rb", ".rhtml", ".dll", ".cfm", ".cgi", ".svg", ".py", "jhtml", ".xhtml", ".swf", ".asp", ".aspx", ".css", ".js", ".xml", ".ico", ".jpg", ".jpeg", ".png", ".csp", ".do", ".jsf", ".jspx", ".php", ".gif"};
 char * EXTENSIONS_PROHIBITED[] = {".rb", ".rhtml", ".dll", ".cfm", ".cgi", ".svg", ".py", "jhtml", ".xhtml", ".swf", ".asp", ".aspx", ".css", ".js", ".xml", ".ico", ".jpg", ".jpeg", ".png", ".csp", ".do", ".jsf", ".jspx", ".php", ".gif"};
 char ** EXTENSIONS_PROHIBITED_CUSTOM;

@@ -87,6 +87,7 @@ void init() {
 
     //Apagando anteriores
     if (OVERIDE_OLD_FILES) {
+
         FILE * a = fopen(FILENAME_LINKS, "w");
         if (a != NULL)
             fclose(a);
@@ -292,22 +293,8 @@ int main(int argc, char *argv[]) {
 
             } else if (str_startsWith(argv[ai], "--noerase")) {
                 ERASE_WORKSPACE_FOLDER = 0;
-                //                int tam;
-                //                char * l = argv[ai];
-                //                memmove(l, argv[ai] + 7, strlen(argv[ai]));
-                //                if (strlen(l) == 1) {
-                //                    if (str_equals("1", l)) {
-                //                        ERASE_WORKSPACE_FOLDER = 1;
-                //                    } else if (str_equals("0", l)) {
-                //                        ERASE_WORKSPACE_FOLDER = 0;
-                //                    } else {
-                //                        abortingCauseByParameter("LEVEL");
-                //                    }
-                //                } else {
-                //                    abortingCauseByParameter("LEVEL");
-                //                }
             } else if (str_startsWith(argv[ai], "--explicit")) {
-
+                EXPLICIT = 1;
             }
         }
 
@@ -358,7 +345,8 @@ int main(int argc, char *argv[]) {
     if (USE_LOCAL_INDEX_HTML == 0) {
         //char * urlToUseCrowler = "www.jpcontabil.com/wp/";
         //urlToUseCrowler = "www.jpcontabil.com/crowler/index.html";
-        //char * urlToUseCrowler = "www.jpcontabil.com/crowler/";
+        //urlToUseCrowler = "www.jpcontabil.com/crowler/";
+        //urlToUseCrowler = "www.jpcontabil.com/crowler";
         //char * urlToUseCrowler = "www.openbsd.org";
 
         char * workPath = str_concat(str_concat(str_concat("./", workspace_main), workspance_links), "0a.txt");

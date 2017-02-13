@@ -202,6 +202,7 @@ void writeLinkOnFileOtherFiles(char *txt) {
 }
 
 int checkIfLinkHasAnchor(char * str) {
+    //logs("checkIfLinkHasAnchor");
     if (str_contains(str, "#")) {
         char** arr = str_split(str, '#');
         int tam = (sizeof (getExtensionsAllowed()) / sizeof (char *)), j, i;
@@ -243,6 +244,7 @@ int tratarLinha(char * linha) {
 
             while (pch != NULL) {
                 if (checkIfLineContainsLink(pch)) {
+                    //logs(pch);
                     char * str = tratarLink(pch);
 
                     //Não salvo se link for VAZIO
@@ -414,22 +416,26 @@ char * tratarLink(char* link) {
     //removo aspas iniciais
     aux = str_removeFirstCharFromString(aux);
     //removo aspas finais
-    aux = str_removeLastCharFromString(aux);
+    //aux = str_removeLastCharFromString(aux);
 
     /*As vezes há .css que possuem algo tipo: 
       ...href="a.css"/>
      O > foi cortado pelo split, antes de entrar nesse método, então fica
       sobrando a " (já q a barra foi cortado pelo str_removeLastCharFromString acima
      */
-    if (str_endsWith(aux, "\"")) {
+    if (aux[strlen(aux) - 1] == '/') {
+        aux = str_removeLastCharFromString(aux);
+    }
+    if (aux[strlen(aux) - 1] == '"') {
         aux = str_removeLastCharFromString(aux);
     }
 
+    //logs(aux);
     return aux;
 }
 
 char * tratarSrc(char* link) {
-    //logs(str_concat("tratarSrc() ", link));
+    logs(str_concat("tratarSrc() ", link));
     char * aux = link; //str_replace(" ", "", link);
 
     //Removendo (href=) e (data-href=) da linha
@@ -452,25 +458,40 @@ char * tratarSrc(char* link) {
 }
 
 int checkIfStringHasForbiddenEnding(char* str) {
+    //logs("checkIfStringHasForbiddenEnding");
     if (str_startsWith(str, "mailto:")) {
         return 1;
     }
 
     char ** tokens = str_split(str, '?'); //As vezes existem parameters ao final do link
-    int i;
+    int tam = (sizeof (getExtensionsProhibited()) / sizeof (char *));
+    char ** extensoes = getExtensionsProhibited();
+    int i, j;
     for (i = 0; *(tokens + i); i++) {
 
         if (str_equals(*(tokens + i), "#")) {
             return 1;
         }
-        int j = 0;
-        int tam = (sizeof (getExtensionsProhibited()) / sizeof (char *));
 
-        for (j = 0; j < tam; j++) {
-            //logs(str_concat(str_concat(*(tokens + i), "\t==\t"), EXTENSIONS_PROHIBITED[j]));
-            if (str_endsWith(*(tokens + i), getExtensionsProhibited()[j])) {
+        for (j = 0; *(extensoes + j); j++) {
+            //printf("%s == %s\n");
+            if (str_endsWith(*(tokens + i), *(extensoes + j))) {
                 return 1;
             }
+        }
+
+        /*Se chegar até aqui, significa que não encontrou extensões proibidas.
+        Então se não encontrar as extensões PERMITIDAS, será bloqueado.*/
+        if (EXPLICIT) {
+            tam = (sizeof (getExtensionsAllowed()) / sizeof (char *));
+            for (j = 0; j < tam; j++) {
+                if (str_endsWith(*(tokens + i), getExtensionsAllowed()[j])) {
+                    return 0;
+                }
+            }
+            /*Se chegar aqui, link não tem extensão permitida, e pode ser um "folder"
+            Então irá descartar.*/
+            return 1;
         }
     }
     return 0;
@@ -518,7 +539,7 @@ char * parserINIT(char * name, char * path_with_filename, char * url) {
         logs("parserINIT() ERROR AT FILE .HTML/.HTM OPENING");
         exit(EXIT_FAILURE);
     }
-    //logs(str_concat("ANTES ", DOMAIN1));
+    //logs(str_concat("DOMINIO ", getDomainWithBar()));
     int qntd_links = 0;
     while ((read = getline(&line, &len, fp)) != -1) {
         if (checkIfLineContainsLink(line) || checkIfLineContainsSrc(line)) {
@@ -682,25 +703,61 @@ void removeDuplicatedLinksFolder() {
 }
 
 char ** getDomainAndLevels() {
-    //logs("getDomainAndLevels()");
-    //logs(getDomain());
-    int tam = (sizeof (getExtensionsAllowed()) / sizeof (char *)), j;
-    for (j = 0; j < tam; j++) {
-        char ** extensoes = getExtensionsAllowed();
-        if (str_endsWith(getDomainWithOutBar(), *(extensoes + j))) {
-            char** link = str_split(getDomainWithBar(), '/');
+    //logs(str_concat("getDomainAndLevels() ", getDomainWithBar()));
 
-            char * aux = "";
-            int i;
-            for (i = 0; *(link + i); i++) {
-                aux = str_concat(aux, str_concat(*(link + i), "/"));
-                if (!*(link + (i + 2))) {
-                    break;
-                }
-            }
-            return str_split(aux, '/');
+    int tam = (sizeof (getExtensionsAllowed()) / sizeof (char *)), j, boolean = 0;
+    char ** extensoes = getExtensionsAllowed();
+    //logs("AEUHAIEUAHIEUAHEIAUEH");
+    char * domainNoBar = getDomainWithOutBar();
+    for (j = 0; j < tam; j++) {
+        if (str_endsWith(domainNoBar, *(extensoes + j))) {
+            //logs("AAAAE");
+            boolean = 1;
+            break;
         }
     }
+    if (!boolean) {
+        tam = (sizeof (getExtensionsProhibited()) / sizeof (char *));
+        extensoes = getExtensionsProhibited();
+        for (j = 0; j < tam; j++) {
+            if (str_endsWith(domainNoBar, *(extensoes + j))) {
+                //logs("AAAAE22222s");
+                boolean = 1;
+                break;
+            }
+        }
+    }
+    /* Quando url tiver o fim sem ser uma EXTENSÃO (folder), adiciono o ultimo ITEM após a barra.
+     *  Quando for uma extensão, desconsidero a ultima. Também faço a verificação
+     *  para os ext proibidos. não importa a extensão, o que importa é saber
+     *  que É uma extensão.*/
+    char * aux = "";
+
+    //    char** link = str_split(getDomainWithBar(), '/');
+    //    int i;
+    //    for (i = 0; *(link + i); i++) {
+    //        aux = str_concat(aux, str_concat(*(link + i), "/"));
+    //        if (boolean && !*(link + (i + 2))) {
+    //            break;
+    //        }
+    //    }
+
+    char **tokens;
+    size_t numtokens, i3;
+    tokens = split(getDomainWithBar(), "/", &numtokens);
+    //logi(numtokens);
+
+    for (i3 = 0; i3 < numtokens; i3++) {
+        //logs(tokens[i3]);
+        aux = str_concat(aux, str_concat(tokens[i3], "/"));
+        if (boolean && i3 + 2 >= numtokens) {
+            break;
+        }
+    }
+    //logs(str_concat("getDomainAndLevels() FINAL \t", aux));
+    return str_split(aux, '/');
+    //}
+    //}
 
 
     //    if (str_endsWith(getDomainWithOutBar(), ".html") || str_endsWith(getDomainWithOutBar(), ".htm")) {
@@ -786,19 +843,41 @@ char * removerNiveisDiferentes(char * txt) {
 
 char * getDomain() {
     //logs("getDomain()");
-    char** link = str_split(getDomainWithBar(), '/');
+    //char** link = str_split(getDomainWithBar(), '/');
     char * dom = "";
-    int i;
-    for (i = 0; *(link + i); i++) {//So PEGO O PRIMEIRO SE EXITIR PRIMEIRO
-        dom = str_concat(dom, *(link + i));
+
+    char **tokens;
+    size_t numtokens;
+    tokens = split(getDomainWithBar(), "/", &numtokens);
+    for (size_t i = 0; i < numtokens; i++) {
+        dom = str_concat(dom, tokens[i]);
         break;
     }
+
+
+
+
+
+
+
+
+
+
+    //    int i;
+    //    for (i = 0; *(link + i); i++) {//So PEGO O PRIMEIRO SE EXITIR PRIMEIRO
+    //        dom = str_concat(dom, *(link + i));
+    //        break;
+    //    }
+    //logs(str_concat("getDomain() FiNAL \t", dom));
     return dom;
 }
 
 char * getDomainWithOutBar() {
     if (str_endsWith(DOMAIN1, "/")) {
-        return str_removeLastCharFromString(DOMAIN1);
+        //logs("getDomainWithOutBar()");
+        char * aux = DOMAIN1;
+        memmove(aux, aux, strlen(aux) - 2);
+        return aux; //str_removeLastCharFromString(DOMAIN1);
     }
     return DOMAIN1;
 }
@@ -811,10 +890,11 @@ char * getDomainWithBar() {
 }
 
 char * completarLink(char * str) {
+    //logs(str_concat("completarLink() INICIO \t", str));
     char * aux = addBarraAString(str);
-    if (str_startsWith(aux, "http") || str_startsWith(aux, "www")) {
+    if (str_startsWith(aux, "http") || str_startsWith(aux, "www") || str_startsWith(aux, "//")) {
         //dummy if
-    } else if (str_startsWith(aux, "/") && !str_startsWith(aux, "//")) {
+    } else if (str_startsWith(aux, "/")) {
         //logs(str_concat("completarLink(1) ", str));
         /*exemplo "/painel", isso quer dizer q vai direcionar pra raiz/painel*/
         aux = str_concat(str_concat(getDomain(), "/"), aux);
@@ -832,28 +912,32 @@ char * completarLink(char * str) {
             }
             aux = str_concat(full, aux);
         }
-    } else {// if (str_endsWith(, ".html") || str_endsWith(str, ".htm")) {
-        int tam = (sizeof (getExtensionsAllowed()) / sizeof (char *)), j;
-        for (j = 0; j < tam; j++) {
-            char ** extensoes = getExtensionsAllowed();
-            if (str_endsWith(str, *(extensoes + j))) {
-                char ** folders = getDomainAndLevels();
-                if (folders == NULL) {
-                    aux = str_concat(getDomainWithBar(), aux);
-                } else {
-                    char * full = "";
-                    int i;
-                    for (i = 0; *(folders + i); i++) {
-                        //logs(*(folders + i));
+    } else {// if (str_endsWith(, ".html") || str_endsWith(str, ".htm")) 
+        //logs(str_concat("completarLink(3) ", aux));
+        /*exemplo "a.html"*/
+        //int tam = (sizeof (getExtensionsAllowed()) / sizeof (char *)), j;
+        //for (j = 0; j < tam; j++) {
+        //char ** extensoes = getExtensionsAllowed();
+        //if (str_endsWith(str, *(extensoes + j))) {
+        char ** folders = getDomainAndLevels();
+        if (folders == NULL) {
+            //logs("folders==NULL");
+            aux = str_concat(getDomainWithBar(), aux);
+        } else {
+            //logs("folders!=NULL");
+            char * full = "";
+            int i;
+            for (i = 0; *(folders + i); i++) {
+                //logs(*(folders + i));
 
-                        full = str_concat(full, str_concat(*(folders + i), "/"));
-                    }
-
-                    aux = str_concat(full, aux);
-                }
-                break;
+                full = str_concat(full, str_concat(*(folders + i), "/"));
             }
+
+            aux = str_concat(full, aux);
         }
+        //break;
+        //}
+        //}
 
 
 
@@ -876,8 +960,8 @@ char * completarLink(char * str) {
         //            aux = str_concat(full, aux);
         //        }
     }
-    //logs(str_concat("completarLink() ", aux));
     aux = removerNiveisDiferentes(aux);
+    //logs(str_concat("completarLink() FIM\t", aux));
 
     return aux;
 }

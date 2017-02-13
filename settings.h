@@ -11,7 +11,6 @@
 
 char ** getExtensionsAllowed();
 char ** getExtensionsProhibited();
-//char * EXTENSIONS_ALLOWED[];
 char * workspace_main;
 char * workspance_links;
 char * FILENAME_LINKS;
@@ -28,7 +27,9 @@ int SAVE_LINKS_OTHERFILES;
 int OVERIDE_OLD_FILES;
 int ERASE_WORKSPACE_FOLDER;
 int LEVEL_ALLOWED;
+int EXPLICIT;
 void setExtensionsAllowed(char ** newArray);
 void setExtensionsProhibited();
+
 #endif /* SETTINGS_H */
 

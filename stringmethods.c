@@ -346,9 +346,12 @@ int str_startsWith(const char *str, const char *prefix) {
 }
 
 char * str_removeLastCharFromString(char* str) {
+    //logs("str_removeLastCharFromString");
     char * aux = str;
+    //memmove(aux, aux, strlen(aux) - 2);
     int i = strlen(aux);
     aux[i - 1] = 0;
+    //logs(aux);
     return aux;
 }
 
