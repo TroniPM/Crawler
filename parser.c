@@ -510,24 +510,24 @@ char * tratarLink(char* link) {
 
     //
     //removo aspas iniciais (as vezes por algum motivo vem uma letra no primeiro char...)
-    if (!str_startsWith(aux, "a") || !str_startsWith(aux, "b") || !str_startsWith(aux, "c")
-            || !str_startsWith(aux, "d") || !str_startsWith(aux, "e") || !str_startsWith(aux, "f")
-            || !str_startsWith(aux, "g") || !str_startsWith(aux, "h") || !str_startsWith(aux, "i")
-            || !str_startsWith(aux, "j") || !str_startsWith(aux, "k") || !str_startsWith(aux, "l")
-            || !str_startsWith(aux, "m") || !str_startsWith(aux, "n") || !str_startsWith(aux, "o")
-            || !str_startsWith(aux, "p") || !str_startsWith(aux, "q") || !str_startsWith(aux, "r")
-            || !str_startsWith(aux, "s") || !str_startsWith(aux, "t") || !str_startsWith(aux, "u")
-            || !str_startsWith(aux, "v") || !str_startsWith(aux, "x") || !str_startsWith(aux, "z")
-            || !str_startsWith(aux, "w") || !str_startsWith(aux, "y") || !str_startsWith(aux, "A")
-            || !str_startsWith(aux, "B") || !str_startsWith(aux, "C") || !str_startsWith(aux, "D")
-            || !str_startsWith(aux, "E") || !str_startsWith(aux, "F") || !str_startsWith(aux, "G")
-            || !str_startsWith(aux, "H") || !str_startsWith(aux, "I") || !str_startsWith(aux, "J")
-            || !str_startsWith(aux, "K") || !str_startsWith(aux, "L") || !str_startsWith(aux, "M")
-            || !str_startsWith(aux, "N") || !str_startsWith(aux, "O") || !str_startsWith(aux, "P")
-            || !str_startsWith(aux, "Q") || !str_startsWith(aux, "R") || !str_startsWith(aux, "S")
-            || !str_startsWith(aux, "T") || !str_startsWith(aux, "U") || !str_startsWith(aux, "V")
-            || !str_startsWith(aux, "X") || !str_startsWith(aux, "Z") || !str_startsWith(aux, "W")
-            || !str_startsWith(aux, "Y")) {
+    if (!str_startsWith(aux, "a") && !str_startsWith(aux, "b") && !str_startsWith(aux, "c")
+            && !str_startsWith(aux, "d") && !str_startsWith(aux, "e") && !str_startsWith(aux, "f")
+            && !str_startsWith(aux, "g") && !str_startsWith(aux, "h") && !str_startsWith(aux, "i")
+            && !str_startsWith(aux, "j") && !str_startsWith(aux, "k") && !str_startsWith(aux, "l")
+            && !str_startsWith(aux, "m") && !str_startsWith(aux, "n") && !str_startsWith(aux, "o")
+            && !str_startsWith(aux, "p") && !str_startsWith(aux, "q") && !str_startsWith(aux, "r")
+            && !str_startsWith(aux, "s") && !str_startsWith(aux, "t") && !str_startsWith(aux, "u")
+            && !str_startsWith(aux, "v") && !str_startsWith(aux, "x") && !str_startsWith(aux, "z")
+            && !str_startsWith(aux, "w") && !str_startsWith(aux, "y") && !str_startsWith(aux, "A")
+            && !str_startsWith(aux, "B") && !str_startsWith(aux, "C") && !str_startsWith(aux, "D")
+            && !str_startsWith(aux, "E") && !str_startsWith(aux, "F") && !str_startsWith(aux, "G")
+            && !str_startsWith(aux, "H") && !str_startsWith(aux, "I") && !str_startsWith(aux, "J")
+            && !str_startsWith(aux, "K") && !str_startsWith(aux, "L") && !str_startsWith(aux, "M")
+            && !str_startsWith(aux, "N") && !str_startsWith(aux, "O") && !str_startsWith(aux, "P")
+            && !str_startsWith(aux, "Q") && !str_startsWith(aux, "R") && !str_startsWith(aux, "S")
+            && !str_startsWith(aux, "T") && !str_startsWith(aux, "U") && !str_startsWith(aux, "V")
+            && !str_startsWith(aux, "X") && !str_startsWith(aux, "Z") && !str_startsWith(aux, "W")
+            && !str_startsWith(aux, "Y")) {
         aux = str_removeFirstCharFromString(aux);
     }
     //removo aspas finais
