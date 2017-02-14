@@ -14,6 +14,7 @@ char ** getExtensionsProhibited();
 char * workspace_main;
 char * workspance_links;
 char * FILENAME_LINKS;
+char * FILENAME_EMAIL;
 char * FILENAME_OTHERFILES;
 char * FILENAME_OTHERDOMAINS;
 char * FILENAME_LINKS_DOWNLOADED;
@@ -30,6 +31,7 @@ int OVERIDE_OLD_FILES;
 int ERASE_WORKSPACE_FOLDER;
 int LEVEL_ALLOWED;
 int EXPLICIT;
+int CURRENT_LEVEL;
 void setExtensionsAllowed(char ** newArray, int tamanho);
 void setExtensionsProhibited(int tamanho);
 

@@ -139,9 +139,8 @@ int schemeMAIN(char * url, int nivel, long threadId) {
     //logs(str_concat("COMMAND TO RUN: ", cfinal));
 
     int res = system(cfinal);
-
+    writeLinkOnFileDownloaded(url);
     if (res == 0) {
-        writeLinkOnFileDownloaded(url);
 
         char * arq = parserINIT(nomeArquivo, path, url);
 
@@ -151,7 +150,7 @@ int schemeMAIN(char * url, int nivel, long threadId) {
 
     } else {
         char * erroMsg = "ERROR: INVALID URL, OR SERVER DOESN'T ANSWERING, OR SYSTEM DOESN'T SUPPORT 'wget' CALL: ";
-        writeLinkOnFileDownloaded(url);
+
         writeLinkOnFileNotDownloaded(erroMsg, url);
         logs(str_concat(erroMsg, url));
     }
@@ -177,14 +176,13 @@ void repeatScheme(char * txt, int nv) {
                 //printf("Criou pid: %d\t%s\n", getpid(), *(linhasArr + i));
                 forkCreated();
 
-
-
-
                 schemeMAIN(*(linhasArr + i), nv + 1, 0);
                 //printf("Vai finalizar processo: %d\t%s\n", getpid(), *(linhasArr + i));
                 exit(0);
             }
         } else {
+
+            //printf("!!URL JÁ BAIXADA: %s\n", *(linhasArr + i));
             char * msgErro = "LINK JÁ FOI BAIXADO";
             //logs(str_concat(str_concat(msgErro, ":\t"), url));
             writeLinkOnFileNotDownloaded(msgErro, *(linhasArr + i));
@@ -216,13 +214,14 @@ void abortingCauseByParameter(char * param) {
 }
 
 int main(int argc, char *argv[]) {
+
     //1 - COLOCAR EXECL
     //1.2 - PASSAR NIVEL ATUAL POR UM PARAMETRO NO INPUT (-nv=NUM)
 
     //check for help
     char * urlToUseCrowler;
     if (1 == 1) {
-        if (argv[1] != NULL && str_equals("--help", str_toLowerCase(argv[1]))) {
+        if (argv[1] != NULL && str_equals("--help", argv[1])) {
             printHelp();
         }
         int ai;
@@ -261,8 +260,6 @@ int main(int argc, char *argv[]) {
                     int i, i1;
                     for (i1 = 0; *(arr + i1); i1++) {
                     }
-
-
                     newArray = malloc(i1 * sizeof (char*));
                     for (i = 0; i < i1; ++i) {
                         newArray[i] = (char *) malloc(10);
@@ -284,24 +281,29 @@ int main(int argc, char *argv[]) {
                 ERASE_WORKSPACE_FOLDER = 0;
             } else if (str_startsWith(argv[ai], "--explicit")) {
                 EXPLICIT = 1;
+            } else if (str_startsWith(argv[ai], "-nv=")) {
+                char * l = argv[ai];
+
+                memmove(l, l + 4, strlen(l));
+                CURRENT_LEVEL = str_stringToInt(l);
             }
         }
-
-
-        //        char ** extensoes = getExtensionsAllowed();
-        //        int tam = getExtensionsAllowedSize(), i1;
-        //        for (i1 = 0; i1 < getExtensionsAllowedSize(); i1++) {
-        //            printf("-->EXTENSOES ALLOWED[%d]: %s\n", i1, extensoes[i1]);
-        //        }
-        //        extensoes = getExtensionsProhibited();
-        //        for (i1 = 0; i1 < getExtensionsProhibitedSize(); i1++) {
-        //            printf("-->EXTENSOES PROHIBITED[%d]: %s\n", i1, *(extensoes + i1));
-        //        }
 
         if (!required) {
             printHelp();
         }
     }
+    //    char ** extensoes = getExtensionsAllowed();
+    //    int tam = getExtensionsAllowedSize(), i1;
+    //    for (i1 = 0; i1 < getExtensionsAllowedSize(); i1++) {
+    //        printf("-->EXTENSOES ALLOWED[%d]: %s\n", i1, extensoes[i1]);
+    //    }
+    //    extensoes = getExtensionsProhibited();
+    //    for (i1 = 0; i1 < getExtensionsProhibitedSize(); i1++) {
+    //        printf("-->EXTENSOES PROHIBITED[%d]: %s\n", i1, *(extensoes + i1));
+    //    }
+
+
     //logs(argv[1]);
     //execl("./crowler1", NULL);
     //execl("cd /dist/Debug/GNU-Linux/ && ./crowler1", NULL);
@@ -314,16 +316,17 @@ int main(int argc, char *argv[]) {
 
     forkCreated();
 
-    //logs("main()");
     init();
     int qntd_links = 0;
 
     if (USE_LOCAL_INDEX_HTML == 0) {
-        //char * urlToUseCrowler = "www.jpcontabil.com/wp/";
-        //urlToUseCrowler = "www.jpcontabil.com/crowler/index.html";
-        //urlToUseCrowler = "www.jpcontabil.com/crowler/";
         //urlToUseCrowler = "www.jpcontabil.com/crowler";
-        //char * urlToUseCrowler = "www.openbsd.org";
+        //urlToUseCrowler = "www.openbsd.org";
+
+
+        if (CURRENT_LEVEL == 1) {//ANOTA a primeira URL APENAS. As demais seão escritas a medida q forem sendo encontradas
+            writeAndEnumerate(urlToUseCrowler);
+        }
 
         char * workPath = str_concat(str_concat(str_concat("./", workspace_main), workspance_links), "0a.txt");
         FILE * arq = fopen(workPath, "w+");

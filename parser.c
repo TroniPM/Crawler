@@ -49,6 +49,8 @@ void writeLinkOnFileNotDownloaded(char * motivo, char * link) {
 }
 
 int checkIfLinkWasDownloaded(char * link) {
+    //    if (str_contains(link, "index.html"))
+    //        printf("checkIfLinkWasDownloaded() %s\n", link);
     char * workPath = str_concat(str_concat("./", workspace_main), FILENAME_LINKS_DOWNLOADED);
     char * full = readfile(workPath);
 
@@ -56,8 +58,11 @@ int checkIfLinkWasDownloaded(char * link) {
         char** linhasArr = str_split(full, '\n');
         int i;
         for (i = 0; *(linhasArr + i); i++) {
+            //            if (str_contains(link, "index.html"))
+            //                printf("--------> %s == %s\n", link, *(linhasArr + i));
             if (str_equals(link, *(linhasArr + i))) {
-
+                //                if (str_contains(link, "index.html"))
+                //                    printf("RETORNANDO 1 PORQUE ENCONTROU\n");
                 return 1;
             }
         }
@@ -82,30 +87,33 @@ void writeLinkOnFileDownloaded(char *txt) {
 void writeAndEnumerate(char * link) {
     //logs(str_concat("writeAndEnumerate() INICIO ", link));
     char * linhasFinal = readfile(FILENAME_LINKS);
-    //logs("AE");
+
     if (linhasFinal == NULL) {
         FILE * arq = openFile(FILENAME_LINKS);
         if (arq != NULL) {
-            fprintf(arq, "1 - %s\n", str_trim(link));
+            fprintf(arq, "1 -> %s\n", (link));
             closeFile(arq);
         }
     }
 
     char** arr = str_split(linhasFinal, '\n');
 
-    if (arr == NULL) {
+    if (arr == NULL || !*(arr)) {
         FILE * arq = openFile(FILENAME_LINKS);
         if (arq != NULL) {
-            fprintf(arq, "1 - %s\n", str_trim(link));
+            fprintf(arq, "1 -> %s\n", (link));
             closeFile(arq);
         }
     }
 
-    if (linhasFinal != NULL && arr != NULL) {
+    if (linhasFinal != NULL && arr != NULL && *(arr)) {
         int j, boolean = 1;
         for (j = 0; *(arr + j); j++) {
-            char ** linha = str_split(*(arr + j), '-');
-            if (linha != NULL && *(linha + 1)) {
+            size_t tamanhoArr;
+            //char ** linha = str_split(*(arr + j), '-');
+            char ** linha = split(*(arr + j), " -> ", &tamanhoArr);
+            if (linha != NULL && linha[1] != NULL) {
+                //if (linha != NULL && *(linha + 1)) {
                 //printf("%s == %s\n", link, str_trim(*(linha + 1)));
                 if (str_equals(link, str_trim(*(linha + 1)))) {
                     boolean = 0;
@@ -115,7 +123,53 @@ void writeAndEnumerate(char * link) {
         if (boolean) {
             FILE * arq = openFile(FILENAME_LINKS);
             if (arq != NULL) {
-                fprintf(arq, "%d - %s\n", (j + 1), str_trim(link));
+                fprintf(arq, "%d -> %s\n", (j + 1), str_trim(link));
+                closeFile(arq);
+            }
+        }
+    }
+}
+
+void writeEmailOnFile(char * link) {
+    //logs(str_concat("writeEmailOnFile() INICIO ", link));
+    char * linhasFinal = readfile(FILENAME_EMAIL);
+
+    if (linhasFinal == NULL) {
+        FILE * arq = openFile(FILENAME_EMAIL);
+        if (arq != NULL) {
+            fprintf(arq, "1 -> %s\n", (link));
+            closeFile(arq);
+        }
+    }
+
+    char** arr = str_split(linhasFinal, '\n');
+
+    if (arr == NULL || !*(arr)) {
+        FILE * arq = openFile(FILENAME_EMAIL);
+        if (arq != NULL) {
+            fprintf(arq, "1 -> %s\n", (link));
+            closeFile(arq);
+        }
+    }
+
+    if (linhasFinal != NULL && arr != NULL && *(arr)) {
+        int j, boolean = 1;
+        for (j = 0; *(arr + j); j++) {
+            size_t tamanhoArr;
+            //char ** linha = str_split(*(arr + j), '-');
+            char ** linha = split(*(arr + j), " -> ", &tamanhoArr);
+            if (linha != NULL && linha[1] != NULL) {
+                //if (linha != NULL && *(linha + 1)) {
+                //printf("%s == %s\n", link, str_trim(*(linha + 1)));
+                if (str_equals(link, str_trim(*(linha + 1)))) {
+                    boolean = 0;
+                }
+            }
+        }
+        if (boolean) {
+            FILE * arq = openFile(FILENAME_EMAIL);
+            if (arq != NULL) {
+                fprintf(arq, "%d -> %s\n", (j + 1), str_trim(link));
                 closeFile(arq);
             }
         }
@@ -252,6 +306,14 @@ int checkIfLinkHasAnchor(char * str) {
     }
 }
 
+int checkIfLinkIsEmail(char * link) {
+    if (str_startsWith(link, "mailto:")) {
+        return 1;
+    } else {
+        return 0;
+    }
+}
+
 int tratarLinha(char * linha) {
     //logs("tratarLinha()");
     //int qtd = str_countOccurrences(linha, " href=");//qntd de links na mesma linha
@@ -276,45 +338,51 @@ int tratarLinha(char * linha) {
 
                     //Não salvo se link for VAZIO
                     if (strlen(str) != 0) {
-                        //DESnegar linha para salvar links proibidos (jpg, png, js, css....)
-                        if (!checkIfStringHasForbiddenEnding(str)) {
-                            str = completarLink(str);
+                        if (!checkIfLinkIsEmail(str)) {
+                            //DESnegar linha para salvar links proibidos (jpg, png, js, css....)
+                            if (!checkIfStringHasForbiddenEnding(str)) {
+                                str = completarLink(str);
 
-                            //NEGAR linha para salvar links de outros domínios
-                            if (checkIfLinkIsSameDomain(str)) {
+                                //NEGAR linha para salvar links de outros domínios
+                                if (checkIfLinkIsSameDomain(str)) {
 
-                                if (!checkIfLinkHasAnchor(str)) {
-                                    str = removeHttpFromLink(str);
+                                    if (!checkIfLinkHasAnchor(str)) {
+                                        str = removeHttpFromLink(str);
 
-                                    if (str_endsWith(str, "/"))
-                                        str = str_removeLastCharFromString(str);
-                                    if (PRINT_LINKS_FOUND) {
-                                        logs(str_concat("LINK: ", str));
+                                        if (str_endsWith(str, "/"))
+                                            str = str_removeLastCharFromString(str);
+                                        if (PRINT_LINKS_FOUND) {
+                                            logs(str_concat("LINK: ", str));
+                                        }
+
+                                        writeLinkOnFileWorkSpace(str);
+                                        writeAndEnumerate(str);
+                                        qtd++;
+                                    } else {
+                                        writeLinkOnFileNotDownloaded("LINK É POSSUI UMA ÂNCORA", str);
                                     }
-
-                                    writeLinkOnFileWorkSpace(str);
-                                    writeAndEnumerate(str);
-                                    qtd++;
-                                } else {
-                                    writeLinkOnFileNotDownloaded("LINK É POSSUI UMA ÂNCORA", str);
+                                } else {//OTHER DOMAIN
+                                    if (SAVE_LINKS_OTHERDOMAINS) {
+                                        str = removeHttpFromLink(str);
+                                        if (str_endsWith(str, "/"))
+                                            str = str_removeLastCharFromString(str);
+                                        writeLinkOnFileOtherDomain(str);
+                                    }
                                 }
-                            } else {//OTHER DOMAIN
-                                if (SAVE_LINKS_OTHERDOMAINS) {
-                                    str = removeHttpFromLink(str);
-                                    if (str_endsWith(str, "/"))
-                                        str = str_removeLastCharFromString(str);
-                                    writeLinkOnFileOtherDomain(str);
-                                }
-                            }
-                        } else {//OTHER FILES
-                            if (SAVE_LINKS_OTHERFILES) {
-                                if (!str_equals(str, "#")) {
-                                    str = removeHttpFromLink(str);
-                                    if (str_endsWith(str, "/"))
-                                        str = str_removeLastCharFromString(str);
-                                    writeLinkOnFileOtherFiles(str);
+                            } else {//OTHER FILES
+                                if (SAVE_LINKS_OTHERFILES) {
+                                    if (!str_equals(str, "#")) {
+                                        str = removeHttpFromLink(str);
+                                        if (str_endsWith(str, "/"))
+                                            str = str_removeLastCharFromString(str);
+                                        writeLinkOnFileOtherFiles(str);
+                                    }
                                 }
                             }
+                        } else {//IS EMAIL
+                            char * email = str;
+                            memmove(email, email + 7, strlen(email)); //removo "mailto:"
+                            writeEmailOnFile(email);
                         }
                     }
 
@@ -441,8 +509,27 @@ char * tratarLink(char* link) {
     }
 
     //
-    //removo aspas iniciais
-    aux = str_removeFirstCharFromString(aux);
+    //removo aspas iniciais (as vezes por algum motivo vem uma letra no primeiro char...)
+    if (!str_startsWith(aux, "a") || !str_startsWith(aux, "b") || !str_startsWith(aux, "c")
+            || !str_startsWith(aux, "d") || !str_startsWith(aux, "e") || !str_startsWith(aux, "f")
+            || !str_startsWith(aux, "g") || !str_startsWith(aux, "h") || !str_startsWith(aux, "i")
+            || !str_startsWith(aux, "j") || !str_startsWith(aux, "k") || !str_startsWith(aux, "l")
+            || !str_startsWith(aux, "m") || !str_startsWith(aux, "n") || !str_startsWith(aux, "o")
+            || !str_startsWith(aux, "p") || !str_startsWith(aux, "q") || !str_startsWith(aux, "r")
+            || !str_startsWith(aux, "s") || !str_startsWith(aux, "t") || !str_startsWith(aux, "u")
+            || !str_startsWith(aux, "v") || !str_startsWith(aux, "x") || !str_startsWith(aux, "z")
+            || !str_startsWith(aux, "w") || !str_startsWith(aux, "y") || !str_startsWith(aux, "A")
+            || !str_startsWith(aux, "B") || !str_startsWith(aux, "C") || !str_startsWith(aux, "D")
+            || !str_startsWith(aux, "E") || !str_startsWith(aux, "F") || !str_startsWith(aux, "G")
+            || !str_startsWith(aux, "H") || !str_startsWith(aux, "I") || !str_startsWith(aux, "J")
+            || !str_startsWith(aux, "K") || !str_startsWith(aux, "L") || !str_startsWith(aux, "M")
+            || !str_startsWith(aux, "N") || !str_startsWith(aux, "O") || !str_startsWith(aux, "P")
+            || !str_startsWith(aux, "Q") || !str_startsWith(aux, "R") || !str_startsWith(aux, "S")
+            || !str_startsWith(aux, "T") || !str_startsWith(aux, "U") || !str_startsWith(aux, "V")
+            || !str_startsWith(aux, "X") || !str_startsWith(aux, "Z") || !str_startsWith(aux, "W")
+            || !str_startsWith(aux, "Y")) {
+        aux = str_removeFirstCharFromString(aux);
+    }
     //removo aspas finais
     //aux = str_removeLastCharFromString(aux);
 
@@ -457,13 +544,16 @@ char * tratarLink(char* link) {
     if (aux[strlen(aux) - 1] == '"') {
         aux = str_removeLastCharFromString(aux);
     }
+    if (aux[strlen(aux) - 1] == '\'') {
+        aux = str_removeLastCharFromString(aux);
+    }
 
     //logs(aux);
     return aux;
 }
 
 char * tratarSrc(char* link) {
-    logs(str_concat("tratarSrc() ", link));
+    //logs(str_concat("tratarSrc() ", link));
     char * aux = link; //str_replace(" ", "", link);
 
     //Removendo (href=) e (data-href=) da linha
@@ -532,6 +622,12 @@ char * removeHttpFromLink(char * str) {
         memmove(aux, aux + 7, strlen(aux));
     } else if (str_startsWith((aux), "https://")) {
         memmove(aux, aux + 8, strlen(aux));
+    } else if (str_contains(aux, "://")) {
+        size_t tam;
+        char ** arr = split(aux, "://", &tam);
+        if (arr[1] != NULL) {
+            return arr[1];
+        }
     }
     return aux;
 }
@@ -651,7 +747,7 @@ void removeDuplicatedLinks() {
 }
 
 void removeDuplicatedLinksFolder() {
-    logs("------------------------------------------------------");
+    //logs("------------------------------------------------------");
     //logs("removeDuplicatedLinks():");
 
     DIR *dir;
@@ -854,7 +950,12 @@ char * getDomainWithBar() {
 char * completarLink(char * str) {
     //logs(str_concat("completarLink() INICIO \t", str));
     char * aux = addBarraAString(str);
-    if (str_startsWith(aux, "http") || str_startsWith(aux, "www") || str_startsWith(aux, "//")) {
+    if (str_startsWith(aux, "http")
+            || str_startsWith(aux, "www")
+            || str_startsWith(aux, "ftp")
+            || str_startsWith(aux, "mailto")
+            || str_startsWith(aux, "//")
+            || str_contains(aux, "://")) {
         //dummy if
     } else if (str_startsWith(aux, "/")) {
         //logs(str_concat("completarLink(1) ", str));

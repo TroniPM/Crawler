@@ -10,6 +10,7 @@
 #define STRINGMETHODS_H
 
 char **split(const char* str, const char* delim, size_t* numtokens);
+int str_stringToInt(char * str);
 int str_countOcurrences(char * search, char * subject);
 int getLinesFromFile(char * txt);
 int str_contains(char * original, char * tofind);

@@ -14,6 +14,7 @@
 
 
 char * FILENAME_LINKS = "links_valid.txt";
+char * FILENAME_EMAIL = "links_email.txt";
 char * FILENAME_OTHERFILES = "links_otherFiles.txt";
 char * FILENAME_OTHERDOMAINS = "links_otherDomains.txt";
 char * FILENAME_LINKS_DOWNLOADED = "downloaded.txt";
@@ -27,17 +28,18 @@ int SAVE_LINKS_OTHERFILES = 1;
 int ISDEBUG = 1;
 int OVERIDE_OLD_FILES = 1;
 int EXTENSION_ALLOWED_SIZE = 2;
-int EXTENSION_PROHIBITED_SIZE = 25;
+int EXTENSION_PROHIBITED_SIZE = 42;
 int customExtensions = 0;
 
 /*SETTEBLE PARAMETERS FORM COMMAND LINE*/
+int CURRENT_LEVEL = 1;
 int EXPLICIT = 0;
 int ERASE_WORKSPACE_FOLDER = 1;
-int LEVEL_ALLOWED = 5;
+int LEVEL_ALLOWED = 3;
 
-//SEMPRE ADICINOAR EXTENSOES NO ARRAY ALL E NO ARRAY "FIXO"
-char * EXTENSIONS_ALL[] = {".html", ".htm", ".rb", ".rhtml", ".dll", ".cfm", ".cgi", ".svg", ".py", "jhtml", ".xhtml", ".swf", ".asp", ".aspx", ".css", ".js", ".xml", ".ico", ".jpg", ".jpeg", ".png", ".csp", ".do", ".jsf", ".jspx", ".php", ".gif"};
-char * EXTENSIONS_PROHIBITED[] = {".rb", ".rhtml", ".dll", ".cfm", ".cgi", ".svg", ".py", "jhtml", ".xhtml", ".swf", ".asp", ".aspx", ".css", ".js", ".xml", ".ico", ".jpg", ".jpeg", ".png", ".csp", ".do", ".jsf", ".jspx", ".php", ".gif"};
+//SEMPRE ADICINOAR EXTENSOES NO ARRAY ALL E NO ARRAY "FIXO" || alterar EXTENSION_PROHIBITED_SIZE e EXTENSION_ALLOWED_SIZE
+char * EXTENSIONS_ALL[] = {".html", ".htm", ".php", ".rb", ".rhtml", ".dll", ".cfm", ".cgi", ".svg", ".py", "jhtml", ".xhtml", ".swf", ".asp", ".aspx", ".css", ".js", ".xml", ".ico", ".jpg", ".jpeg", ".png", ".csp", ".do", ".jsf", ".jspx", ".pdf", ".gif", ".ps", ".txt", ".shar", ".roff", ".tgz", ".zip", ".rar", ".tar", ".csv", ".exe", ".bat", ".rtf", ".doc", ".docx", ".odt", ".gz"};
+char * EXTENSIONS_PROHIBITED[] = {".php", ".css", ".js", ".xml", ".ico", ".jpg", ".jpeg", ".png", ".pdf", ".gif", ".rb", ".rhtml", ".dll", ".cfm", ".cgi", ".svg", ".py", "jhtml", ".xhtml", ".swf", ".asp", ".aspx", ".csp", ".do", ".jsf", ".jspx", ".ps", ".txt", ".shar", ".roff", ".tgz", ".zip", ".rar", ".tar", ".csv", ".exe", ".bat", ".rtf", ".doc", ".docx", ".odt", ".gz"};
 char ** EXTENSIONS_PROHIBITED_CUSTOM;
 char * EXTENSIONS_ALLOWED[] = {".html", ".htm"};
 char ** EXTENSIONS_ALLOWED_CUSTOM;

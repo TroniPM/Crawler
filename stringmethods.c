@@ -18,6 +18,15 @@
 #include "stringmethods.h"
 #include "settings.h"
 
+int str_stringToInt(char * str) {
+    int len = strlen(str), i, result = -9999;
+    for (i = 0; i < len; i++) {
+        result = result * 10 + (str[i] - '0');
+    }
+
+    return result;
+}
+
 int getLinesFromFile(char * txt) {
     int lines = 0;
     FILE * arq = fopen(txt, "r");
@@ -372,7 +381,7 @@ char * addBarraAString(char * str) {
 
 char * str_toLowerCase(char * str) {
     char * aux = str;
-    for (int i = 0; str[i]; i++) {
+    for (int i = 0; i < strlen(aux); i++) {
         aux[i] = tolower(str[i]);
     }
 
