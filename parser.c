@@ -380,9 +380,11 @@ int tratarLinha(char * linha) {
                                 }
                             }
                         } else {//IS EMAIL
-                            char * email = str;
-                            memmove(email, email + 7, strlen(email)); //removo "mailto:"
-                            writeEmailOnFile(email);
+                            if (SAVE_EMAIL) {
+                                char * email = str;
+                                memmove(email, email + 7, strlen(email)); //removo "mailto:"
+                                writeEmailOnFile(email);
+                            }
                         }
                     }
 

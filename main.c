@@ -29,6 +29,7 @@ void repeatScheme(char * txt, int nv);
 void writeLinkOnFileNotDownloaded(char * motivo, char * link);
 void printHelp();
 void forkCreated();
+void writeAndEnumerate(char * link);
 
 int masterPID = -1;
 
@@ -275,12 +276,16 @@ int main(int argc, char *argv[]) {
                     char* arr[] = {str_concat(".", l)}; //str_split(l, ',');
                     setExtensionsAllowed(arr, 1);
                 }
-
-                //logs("NO FIM DO IF2");
             } else if (str_startsWith(argv[ai], "--noerase")) {
                 ERASE_WORKSPACE_FOLDER = 0;
             } else if (str_startsWith(argv[ai], "--explicit")) {
                 EXPLICIT = 1;
+            } else if (str_startsWith(argv[ai], "--email")) {
+                SAVE_EMAIL = 1;
+            } else if (str_startsWith(argv[ai], "--otherdomains")) {
+                SAVE_LINKS_OTHERDOMAINS = 1;
+            } else if (str_startsWith(argv[ai], "--otherfiles")) {
+                SAVE_LINKS_OTHERFILES = 1;
             } else if (str_startsWith(argv[ai], "-nv=")) {
                 char * l = argv[ai];
 
@@ -392,23 +397,31 @@ void printHelp() {
     printf("\text*             | set the allowed files extensions that \n");
     printf("\t                   crowler can access (default: html and htm).\n");
     printf("\t                   Use common (,) to separate extensions.\n\n");
-    printf("\tnoerase*         | if you use this, all files (pages) catched\n");
+    printf("\tnoerase*         | if you set this, all files (pages) catched\n");
     printf("\t                   will be available to you inside a folder\n");
     printf("\t                   named 'workspace_crowler'.\n\n");
-    printf("\texplicit*        | if you use this, the crowler only will map \n");
+    printf("\texplicit*        | if you set this, the crowler only will map \n");
     printf("\t                   pages with explicit extensions. Example: \n");
     printf("\t                   'www.openbsd.org/panel' won't be mapped.\n");
     printf("\t                   'www.openbsd.org/panel/index.html' will be mapped.\n\n");
+    printf("\temail*           | if you set this, the program will save every \n");
+    printf("\t                   email found on file named 'links_emails.txt'.\n\n");
+    printf("\totherdomains*    | if you set this, the program will save every\n");
+    printf("\t                   link of other domain on a file named\n");
+    printf("\t                   'links_otherDomains.txt'.\n\n");
+    printf("\totherfiles*      | if you set this, the program will save every\n");
+    printf("\t                   file with prohibited extension on a file named \n");
+    printf("\t                   'links_otherDomains.txt'.\n\n");
     printf("HOW TO:\n");
     printf("\t./crowler -link=http://...com -level=3\n");
     printf("\t./crowler -link=www...org -ext=html,htm\n");
     printf("\t./crowler -link=www...com/painel --explicit\n");
-    printf("\t./crowler -link=subdomain.maindomain.com --noerase -level=5 -ext=html,htm --explicit\n\n\n");
+    printf("\t./crowler -link=subdomain.maindomain.com --noerase -level=5 -ext=html,htm,php --explicit --email --otherdomains --otherfiles\n\n\n");
     printf("\t#######################################################\n");
     printf("\t                      OBSERVATIONS\n");
     printf("\t#######################################################\n\n");
     printf(" 1- We strong recommend you just use this software only on websites you own. Otherwise you can cause unnecessary problems...\n");
-    printf(" 2- The crowler doesn't work for different domains, that is, if the website www.test.com has a google link like www.google.com/accessIt, the crowler will dump this link as 'otherDomain', and will block further actions.\n");
+    printf(" 2- The crowler doesn't work for different domains. If the website www.test.com has a google link like www.google.com/accessIt, the crowler will dump this link as 'otherDomain', and will block further actions.\n");
     printf(" 3- Subdomains won't be mapped. Ex: www.google.com AND groups.google.com.\n");
     printf(" 4- Do NOT include spaces between PARAMETERS and their CONTENT, or it won't work properly.\n");
     printf(" 5- The parameters order does not matters.\n");
