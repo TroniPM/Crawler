@@ -12,7 +12,7 @@
 #include "stringmethods.h"
 #include "settings.h"
 
-
+char * CURRENT_FILE_NAME;
 char * FILENAME_LINKS = "links_valid.txt";
 char * FILENAME_EMAIL = "links_email.txt";
 char * FILENAME_OTHERFILES = "links_otherFiles.txt";
@@ -30,8 +30,8 @@ int EXTENSION_PROHIBITED_SIZE = 42;
 int customExtensions = 0;
 
 /*SETTEBLE PARAMETERS FORM COMMAND LINE*/
-int SAVE_LINKS_OTHERDOMAINS = 1;
-int SAVE_LINKS_OTHERFILES = 1;
+int SAVE_LINKS_OTHERDOMAINS = 0;
+int SAVE_LINKS_OTHERFILES = 0;
 int SAVE_EMAIL = 0;
 int CURRENT_LEVEL = 1;
 int EXPLICIT = 0;

@@ -86,16 +86,20 @@ void init() {
 
     //Apagando anteriores
     if (OVERIDE_OLD_FILES) {
+        //        FILE * a = fopen(FILENAME_LINKS, "w");
+        //        if (a != NULL)
+        //            fclose(a);
+        //        FILE * b = fopen(FILENAME_OTHERFILES, "w");
+        //        if (b != NULL)
+        //            fclose(b);
+        //        FILE * c = fopen(FILENAME_OTHERDOMAINS, "w");
+        //        if (a != NULL)
+        //            fclose(c);
 
-        FILE * a = fopen(FILENAME_LINKS, "w");
-        if (a != NULL)
-            fclose(a);
-        FILE * b = fopen(FILENAME_OTHERFILES, "w");
-        if (b != NULL)
-            fclose(b);
-        FILE * c = fopen(FILENAME_OTHERDOMAINS, "w");
-        if (a != NULL)
-            fclose(c);
+
+        int i = system(str_concat("rm ", FILENAME_OTHERDOMAINS));
+        i = system(str_concat("rm ", FILENAME_OTHERFILES));
+        i = system(str_concat("rm ", FILENAME_LINKS));
     }
 
 }
@@ -109,7 +113,7 @@ void ending() {
 /** argumento 1 será o link
  * argumento 2 será o nível de procura (até 5)
  */
-int schemeMAIN(char * url, int nivel, long threadId) {
+int schemeMAIN(char * url, int nivel) {
 
     if (checkIfLinkWasDownloaded(url)) {
         char * msgErro = "LINK JÁ FOI BAIXADO";
@@ -127,7 +131,7 @@ int schemeMAIN(char * url, int nivel, long threadId) {
 
     //logs("-----------------------------------------");
     //logs("schemeMAIN()");
-    printf("LOG: schemeMAIN(): PID: %d\tTHREAD_ID: %ld \tLEVEL: %d \tURL: %s\n", getpid(), threadId, nivel, url);
+    printf("schemeMAIN(): PARENT_PID: %d\tPID: %d\tCURRENT_LEVEL: %d\tURL: %s\n", getppid(), getpid(), nivel, url);
 
     int qntd = 0;
     int num = randomNumber();
@@ -177,13 +181,42 @@ void repeatScheme(char * txt, int nv) {
                 //printf("Criou pid: %d\t%s\n", getpid(), *(linhasArr + i));
                 forkCreated();
 
-                schemeMAIN(*(linhasArr + i), nv + 1, 0);
-                //printf("Vai finalizar processo: %d\t%s\n", getpid(), *(linhasArr + i));
+                char * args = str_concat("-link=", *(linhasArr + i));
+                char str1[20];
+                sprintf(str1, "%d", LEVEL_ALLOWED);
+
+                args = str_concat(args, str_concat(" -level=", str1));
+                if (EXPLICIT) {
+                    args = str_concat(args, " --explicit");
+                }
+                if (!ERASE_WORKSPACE_FOLDER) {
+                    args = str_concat(args, " --noerase");
+                }
+                if (SAVE_EMAIL) {
+                    args = str_concat(args, " --email");
+                }
+                if (SAVE_LINKS_OTHERDOMAINS) {
+                    args = str_concat(args, " --otherdomains");
+                }
+                if (SAVE_LINKS_OTHERFILES) {
+                    args = str_concat(args, " --otherfiles");
+                }
+
+                /*REMOVER*/
+                //CURRENT_LEVEL = nv;
+                /**/
+
+                char str2[20];
+                sprintf(str2, "%d", (nv + 1));
+                args = str_concat(args, str_concat(" -nv=", str2));
+
+                //execl(CURRENT_FILE_NAME, args);
+                //execl("cd /dist/Debug/GNU-Linux/ && ./crowler1", NULL);
+
+                schemeMAIN(*(linhasArr + i), nv + 1);
                 exit(0);
             }
         } else {
-
-            //printf("!!URL JÁ BAIXADA: %s\n", *(linhasArr + i));
             char * msgErro = "LINK JÁ FOI BAIXADO";
             //logs(str_concat(str_concat(msgErro, ":\t"), url));
             writeLinkOnFileNotDownloaded(msgErro, *(linhasArr + i));
@@ -215,11 +248,11 @@ void abortingCauseByParameter(char * param) {
 }
 
 int main(int argc, char *argv[]) {
+    CURRENT_FILE_NAME = argv[0];
 
     //1 - COLOCAR EXECL
     //1.2 - PASSAR NIVEL ATUAL POR UM PARAMETRO NO INPUT (-nv=NUM)
 
-    //check for help
     char * urlToUseCrowler;
     if (1 == 1) {
         if (argv[1] != NULL && str_equals("--help", argv[1])) {
@@ -308,12 +341,6 @@ int main(int argc, char *argv[]) {
     //        printf("-->EXTENSOES PROHIBITED[%d]: %s\n", i1, *(extensoes + i1));
     //    }
 
-
-    //logs(argv[1]);
-    //execl("./crowler1", NULL);
-    //execl("cd /dist/Debug/GNU-Linux/ && ./crowler1", NULL);
-    //exit(0);
-
     struct timeval inicio, final;
     int tmili;
     gettimeofday(&inicio, NULL);
@@ -328,19 +355,19 @@ int main(int argc, char *argv[]) {
         //urlToUseCrowler = "www.jpcontabil.com/crowler";
         //urlToUseCrowler = "www.openbsd.org";
 
-
         if (CURRENT_LEVEL == 1) {//ANOTA a primeira URL APENAS. As demais seão escritas a medida q forem sendo encontradas
             writeAndEnumerate(urlToUseCrowler);
         }
 
         char * workPath = str_concat(str_concat(str_concat("./", workspace_main), workspance_links), "0a.txt");
+
         FILE * arq = fopen(workPath, "w+");
         if (arq != NULL) {
             fprintf(arq, "%s\n", urlToUseCrowler);
             fclose(arq);
         }
 
-        qntd_links = schemeMAIN(urlToUseCrowler, 1, 0);
+        qntd_links = schemeMAIN(urlToUseCrowler, CURRENT_LEVEL);
 
         //removeDuplicatedLinksFolder();
         //enumerateAndSave();

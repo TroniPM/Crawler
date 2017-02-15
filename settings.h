@@ -11,6 +11,7 @@
 
 char ** getExtensionsAllowed();
 char ** getExtensionsProhibited();
+char * CURRENT_FILE_NAME;
 char * workspace_main;
 char * workspance_links;
 char * FILENAME_LINKS;

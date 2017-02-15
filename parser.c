@@ -96,15 +96,18 @@ void writeAndEnumerate(char * link) {
         }
     }
 
-    char** arr = str_split(linhasFinal, '\n');
-
-    if (arr == NULL || !*(arr)) {
-        FILE * arq = openFile(FILENAME_LINKS);
-        if (arq != NULL) {
-            fprintf(arq, "1 -> %s\n", (link));
-            closeFile(arq);
-        }
+    char** arr;
+    if (linhasFinal != NULL) {
+        arr = str_split(linhasFinal, '\n');
     }
+
+    //    if (arr == NULL & !*(arr)) {
+    //        FILE * arq = openFile(FILENAME_LINKS);
+    //        if (arq != NULL) {
+    //            fprintf(arq, "1 -> %s\n", (link));
+    //            closeFile(arq);
+    //        }
+    //    }
 
     if (linhasFinal != NULL && arr != NULL && *(arr)) {
         int j, boolean = 1;

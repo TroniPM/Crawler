@@ -2,67 +2,55 @@
 
 The project is developed in C, an URL same domain Crowler. Specifications (for now):
   - Only same domain (subdomains not included);
-  - Only .html and .htm extension;
-  - Choose remove (or not) all files fetched (at settings.c)
-```c
-int OVERIDE_OLD_FILES = 1;
-int ERASE_WORKSPACE_FOLDER = 1;
-```
-  - Set deep level as you wish (at main.c)
-```c
-int schemeMAIN(char * url, int nivel, long threadId){
-    ...
-    else if (nivel > 5) {
-        block further actions...
-    }
-    ...
-}
-```
+  - Set the deep level;
+  - Extensions to map are settable;
+  - Choose write file with all links from OTHERS domains, all prohibited extensions and all emails found;
+
+Extensions:
+.html, .htm, .php, .rb, .rhtml, .dll, .cfm, .cgi, .svg, .py, jhtml, .xhtml, .swf, .asp, .aspx, .css, .js, .xml, .ico, .jpg, .jpeg, .png, .csp, .do, .jsf, .jspx, .pdf, .gif, .ps, .txt, .shar, .roff, .tgz, .zip, .rar, .tar, .csv, .exe, .bat, .rtf, .doc, .docx, .odt, .gz
   
-In future, you'll can also:
-  - Set extensions you want to get
+## Parameters input (*= optional)
+
+> - **link** = choose one link to make crowler work;
+> - **level*** = set the deep level of crowler (default: 5);
+> - **ext*** = set the allowed files extensions that crowler can access (default: **html** and **htm**). Use common (,) to separate extensions. By setting this, every the **others** extensions (listed above) won't be mapped;
+> - **noerase*** = if you set this, all files (pages) catched will be available to you inside a folder named 'workspace_crowler';
+> - **explicit*** = if you set this, the crowler only will map pages with explicit extensions. Example: 'www.openbsd.org/faq' won't be mapped. 'www.openbsd.org/faq/index.html' will be mapped;
+> - **email*** = if you set this, the program will save every email found on file named 'links_emails.txt';
+> - **otherdomains*** = if you set this, the program will save every link of other domain on a file named 'links_otherDomains.txt';
+> - **otherfiles*** = if you set this, the program will save every file with prohibited extension on a file named 'links_otherDomains.txt';
+
+  - Parameter **link** is required;
+  - If you run with no parameters (or --help), you'll get some info about parameters and running process.
 
 ### Libraries and Syscalls your compiler/systems MUST have:
 * wget
-* PThreads
 * fork
-* execve
+* execl
 
 On windows, you can install wget as `cmd.exe` command by install this [package][wget].
 
 ### Building and Running
-Add your URL at main.c, than run:
-```c
-int main(int argc, char *argv[]) {
-    ...
-    char * urlToUseCrowler = "www.openbsd.org";
-    ...
-}
-```
-Do NOT forget add this parameter at your build:
+Example 1 : 
 ```sh
-$ gcc -pthread...
+./crowler -link=subdomain.maindomain.com --noerase -level=5 -ext=html,htm,php --explicit --email --otherdomains --otherfiles
 ```
-### Output
-The output can be 3 files (You can set this on/off [default ON], as change their names either, at settings.c):
-```c
-int SAVE_LINKS_OTHERDOMAINS = 1;
-int SAVE_LINKS_OTHERFILES = 1;
+Example 2 : 
+```sh
+./crowler -link=subdomain.maindomain.com 
 ```
-  - links_valid.txt (All valid links [no repeat])
-  - links_otherFiles.txt (All files with prohibited extensions)
-  - links_otherDomains.txt (All files with other domains [including different subdomains])
+Example 3 : 
+```sh
+./crowler -link=subdomain.maindomain.com --explicit --email
+```
 
-A folder  will be created to help the program process (as a desktop). By default, that folder is eliminated, but you can set this OFF at settings.c:
-```c
-int ERASE_WORKSPACE_FOLDER = 1;
-```
-You can also keep the old files (`links_valid.txt`, `links_otherFiles.txt` and `links_otherDomains.txt`), and just append content at their end). At settings.c:
-```c
-int OVERIDE_OLD_FILES = 1;
-```
+### Output
+ - The output can be 3 files, valid links not included here. You can set them ON by adding input parameters (--email, --otherdomains, --otherfiles) at start.
+ - A folder  will be created to help the program process. By default, that folder is eliminated, but you can set this OFF adding the parameter "--noerase";
+
 # !!BE CAREFUL `<DANGER>`!!
-The entire process may lead to a memory overflow (depending of website), given the amount of child processes generated. `[TO IMPROVE]`
+ - The entire process may lead to a memory overflow (depending of website arquiteture), given the amount of child processes generated. `[TO IMPROVE]`;
+ - The entire process may take long time. We advise you to drink some coffee and play a bit at your smartphone.
 
 ### Author(s)
  - Paulo Mateus - [Twitter][PMattLink]
