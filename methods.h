@@ -1,7 +1,7 @@
 /******************************************************************************
  * FILE: methods.h
  * DESCRIPTION:
- *   Crowler to map whole website (webpages, imagens, style files, etc).
+ *   Crawler to map whole website (webpages, imagens, style files, etc).
  * AUTHOR: Paulo Mateus
  * EMAIL: paulomatew@gmail.com
  ******************************************************************************/

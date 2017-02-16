@@ -1,7 +1,7 @@
 /******************************************************************************
  * FILE: settings.h
  * DESCRIPTION:
- *   Crowler to map whole website (webpages, imagens, style files, etc).
+ *   Crawler to map whole website (webpages, imagens, style files, etc).
  * AUTHOR: Paulo Mateus
  * EMAIL: paulomatew@gmail.com
  ******************************************************************************/
@@ -11,6 +11,8 @@
 
 char ** getExtensionsAllowed();
 char ** getExtensionsProhibited();
+char * FILENAME_PROCESS_COUNTER;
+char * EXT_PARAM;
 char * CURRENT_FILE_NAME;
 char * workspace_main;
 char * workspance_links;
@@ -23,6 +25,9 @@ char * FILENAME_LINKS_NOT_DOWNLOADED;
 char * URL_DOMAIN;
 int getExtensionsAllowedSize();
 int getExtensionsProhibitedSize();
+int TIMEOUT_TO_DOWNLOAD;
+int WAIT_TO_DOWNLOAD;
+int TRIES_TO_DOWNLOAD;
 int PRINT_LINKS_FOUND;
 int USE_LOCAL_INDEX_HTML;
 int ISDEBUG;

@@ -1,7 +1,7 @@
 /******************************************************************************
  * FILE: parser.c
  * DESCRIPTION:
- *   Crowler to map whole website (webpages, imagens, style files, etc).
+ *   Crawler to map whole website (webpages, imagens, style files, etc).
  * AUTHOR: Paulo Mateus
  * EMAIL: paulomatew@gmail.com
  ******************************************************************************/
@@ -59,8 +59,9 @@ int checkIfLinkWasDownloaded(char * link) {
         int i;
         for (i = 0; *(linhasArr + i); i++) {
             //            if (str_contains(link, "index.html"))
-            //                printf("--------> %s == %s\n", link, *(linhasArr + i));
+            //printf("--------> %s == %s\n", link, *(linhasArr + i));
             if (str_equals(link, *(linhasArr + i))) {
+                //printf("!!!!!!!!!!!!!!!! ENCONTROU %s \n", link);
                 //                if (str_contains(link, "index.html"))
                 //                    printf("RETORNANDO 1 PORQUE ENCONTROU\n");
                 return 1;
@@ -68,7 +69,7 @@ int checkIfLinkWasDownloaded(char * link) {
         }
         free(linhasArr);
     }
-
+    //printf("############### NÃO ENCONTROU %s \n", link);
     return 0;
 }
 
@@ -179,23 +180,61 @@ void writeEmailOnFile(char * link) {
     }
 }
 
-void writeLinkOnFileWorkSpace(char *txt) {
+void writeLinkOnFileWorkSpace(char *link) {
     //logs("writeLinkOnFileWorkSpace()");
-    //FILE * arq = openFile(FILENAME_LINK_WORKSPACE);
     FILE * arq = openFile(FILENAME_LINK_WORKSPACE);
     if (arq != NULL) {
-        fprintf(arq, "%s\n", str_trim(txt));
-
-        //        char * string = readfile(FILENAME_LINK_WORKSPACE);
-        //        char ** arr = str_split(string, '\n');
-        //        int i;
-        //        for (i = 0; *(arr + i); i++) {
-        //
-        //        }
-        //
-        //        fprintf(arq, "%d -> %s\n", (i + 1), str_trim(txt));
+        fprintf(arq, "%s\n", (link));
+        closeFile(arq);
     }
-    closeFile(arq);
+
+
+
+
+
+
+    /*char * linhasFinal = readfile(FILENAME_LINK_WORKSPACE);
+
+    if (linhasFinal == NULL) {
+        FILE * arq = openFile(FILENAME_LINK_WORKSPACE);
+        if (arq != NULL) {
+            fprintf(arq, "1 -> %s\n", (link));
+            closeFile(arq);
+        }
+    }
+
+    char** arr = str_split(linhasFinal, '\n');
+
+    if (arr == NULL || !*(arr)) {
+        FILE * arq = openFile(FILENAME_LINK_WORKSPACE);
+        if (arq != NULL) {
+            fprintf(arq, "1 -> %s\n", (link));
+            closeFile(arq);
+        }
+    }
+
+    if (linhasFinal != NULL && arr != NULL && *(arr)) {
+        int j, boolean = 1;
+        for (j = 0; *(arr + j); j++) {
+            size_t tamanhoArr;
+            //char ** linha = str_split(*(arr + j), '-');
+            char ** linha = split(*(arr + j), " -> ", &tamanhoArr);
+            if (linha != NULL && linha[1] != NULL) {
+                //if (linha != NULL && *(linha + 1)) {
+                //printf("%s == %s\n", link, str_trim(*(linha + 1)));
+                if (str_equals(link, str_trim(*(linha + 1)))) {
+                    boolean = 0;
+                }
+            }
+        }
+        if (boolean) {
+            FILE * arq = openFile(FILENAME_LINK_WORKSPACE);
+            if (arq != NULL) {
+                fprintf(arq, "%d -> %s\n", (j + 1), str_trim(link));
+                closeFile(arq);
+            }
+        }
+    }*/
 }
 
 void writeLinkOnFileFinal(char *txt) {
@@ -230,64 +269,111 @@ void writeLinkOnFileFinal(char *txt) {
     closeFile(arq);
 }
 
-void writeLinkOnFileOtherDomain(char *txt) {
+void writeLinkOnFileOtherDomain(char *link) {
     //logs("writeLinkOnFile()");
     FILE * arq = openFile(FILENAME_OTHERDOMAINS);
     if (arq != NULL) {
-        int ch = 0;
-        int lines = 1;
-        while (!feof(arq)) {
-            ch = fgetc(arq);
-            if (ch == '\n' || ch == '\r') {
-                lines++;
+        fprintf(arq, "%s\n", (link));
+        closeFile(arq);
+    }
+
+
+    /*char * linhasFinal = readfile(FILENAME_OTHERDOMAINS);
+
+    if (linhasFinal == NULL) {
+        FILE * arq = openFile(FILENAME_OTHERDOMAINS);
+        if (arq != NULL) {
+            fprintf(arq, "1 -> %s\n", (link));
+            closeFile(arq);
+        }
+    }
+
+    char** arr = str_split(linhasFinal, '\n');
+
+    if (arr == NULL || !*(arr)) {
+        FILE * arq = openFile(FILENAME_OTHERDOMAINS);
+        if (arq != NULL) {
+            fprintf(arq, "1 -> %s\n", (link));
+            closeFile(arq);
+        }
+    }
+
+    if (linhasFinal != NULL && arr != NULL && *(arr)) {
+        int j, boolean = 1;
+        for (j = 0; *(arr + j); j++) {
+            size_t tamanhoArr;
+            //char ** linha = str_split(*(arr + j), '-');
+            char ** linha = split(*(arr + j), " -> ", &tamanhoArr);
+            if (linha != NULL && linha[1] != NULL) {
+                //if (linha != NULL && *(linha + 1)) {
+                //printf("%s == %s\n", link, str_trim(*(linha + 1)));
+                if (str_equals(link, str_trim(*(linha + 1)))) {
+                    boolean = 0;
+                }
             }
         }
-
-        //logi(lines);
-        if (lines <= 9) {
-            fprintf(arq, "%d     - %s\n", lines, str_trim(txt));
-        } else if (lines <= 99) {
-            fprintf(arq, "%d    - %s\n", lines, str_trim(txt));
-        } else if (lines <= 999) {
-            fprintf(arq, "%d   - %s\n", lines, str_trim(txt));
-        } else if (lines <= 9999) {
-            fprintf(arq, "%d  - %s\n", lines, str_trim(txt));
-        } else {
-            fprintf(arq, "%d - %s\n", lines, str_trim(txt));
+        if (boolean) {
+            FILE * arq = openFile(FILENAME_OTHERDOMAINS);
+            if (arq != NULL) {
+                fprintf(arq, "%d -> %s\n", (j + 1), str_trim(link));
+                closeFile(arq);
+            }
         }
-
-    }
-    closeFile(arq);
+    }*/
 }
 
-void writeLinkOnFileOtherFiles(char *txt) {
+void writeLinkOnFileOtherFiles(char *link) {
     //logs("writeLinkOnFile()");
     FILE * arq = openFile(FILENAME_OTHERFILES);
     if (arq != NULL) {
-        int ch = 0;
-        int lines = 1;
-        while (!feof(arq)) {
-            ch = fgetc(arq);
-            if (ch == '\n' || ch == '\r') {
-                lines++;
+        fprintf(arq, "%s\n", (link));
+        closeFile(arq);
+    }
+
+
+
+    /*char * linhasFinal = readfile(FILENAME_OTHERFILES);
+
+    if (linhasFinal == NULL) {
+        FILE * arq = openFile(FILENAME_OTHERFILES);
+        if (arq != NULL) {
+            fprintf(arq, "1 -> %s\n", (link));
+            closeFile(arq);
+        }
+    }
+
+    char** arr = str_split(linhasFinal, '\n');
+
+    if (arr == NULL || !*(arr)) {
+        FILE * arq = openFile(FILENAME_OTHERFILES);
+        if (arq != NULL) {
+            fprintf(arq, "1 -> %s\n", (link));
+            closeFile(arq);
+        }
+    }
+
+    if (linhasFinal != NULL && arr != NULL && *(arr)) {
+        int j, boolean = 1;
+        for (j = 0; *(arr + j); j++) {
+            size_t tamanhoArr;
+            //char ** linha = str_split(*(arr + j), '-');
+            char ** linha = split(*(arr + j), " -> ", &tamanhoArr);
+            if (linha != NULL && linha[1] != NULL) {
+                //if (linha != NULL && *(linha + 1)) {
+                //printf("%s == %s\n", link, str_trim(*(linha + 1)));
+                if (str_equals(link, str_trim(*(linha + 1)))) {
+                    boolean = 0;
+                }
             }
         }
-
-        //logi(lines);
-        if (lines <= 9) {
-            fprintf(arq, "%d     - %s\n", lines, str_trim(txt));
-        } else if (lines <= 99) {
-            fprintf(arq, "%d    - %s\n", lines, str_trim(txt));
-        } else if (lines <= 999) {
-            fprintf(arq, "%d   - %s\n", lines, str_trim(txt));
-        } else if (lines <= 9999) {
-            fprintf(arq, "%d  - %s\n", lines, str_trim(txt));
-        } else {
-            fprintf(arq, "%d - %s\n", lines, str_trim(txt));
+        if (boolean) {
+            FILE * arq = openFile(FILENAME_OTHERFILES);
+            if (arq != NULL) {
+                fprintf(arq, "%d -> %s\n", (j + 1), str_trim(link));
+                closeFile(arq);
+            }
         }
-
-    }
-    closeFile(arq);
+    }*/
 }
 
 int checkIfLinkHasAnchor(char * str) {
@@ -955,9 +1041,9 @@ char * getDomainWithBar() {
 char * completarLink(char * str) {
     //logs(str_concat("completarLink() INICIO \t", str));
     char * aux = addBarraAString(str);
-    if (str_startsWith(aux, "http")
-            || str_startsWith(aux, "www")
-            || str_startsWith(aux, "ftp")
+    if (//str_startsWith(aux, "http")
+            str_startsWith(aux, "www")
+            //|| str_startsWith(aux, "ftp")
             || str_startsWith(aux, "mailto")
             || str_startsWith(aux, "//")
             || str_contains(aux, "://")) {

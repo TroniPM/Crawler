@@ -1,7 +1,7 @@
 /******************************************************************************
  * FILE: stringmethods.h
  * DESCRIPTION:
- *   Crowler to map whole website (webpages, imagens, style files, etc).
+ *   Crawler to map whole website (webpages, imagens, style files, etc).
  * AUTHOR: Paulo Mateus
  * EMAIL: paulomatew@gmail.com
  ******************************************************************************/
@@ -20,6 +20,7 @@ int str_startsWith(const char * str, const char * prefix);
 int str_equals(char * a1, char * a2);
 void stringmethods_init(char * d);
 void str_substr(char * buffer, size_t buflen, char const * source, int len);
+char *str_copy(const char *source);
 char * readfile(char * filename);
 char * str_removeFirstCharFromString(char * str);
 char * addBarraAString(char * str);

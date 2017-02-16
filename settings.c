@@ -1,7 +1,7 @@
 /******************************************************************************
  * FILE: settings.c
  * DESCRIPTION:
- *   Crowler to map whole website (webpages, imagens, style files, etc).
+ *   Crawler to map whole website (webpages, imagens, style files, etc).
  * AUTHOR: Paulo Mateus
  * EMAIL: paulomatew@gmail.com
  ******************************************************************************/
@@ -14,12 +14,13 @@
 
 char * CURRENT_FILE_NAME;
 char * FILENAME_LINKS = "links_valid.txt";
+char * FILENAME_PROCESS_COUNTER = "processesCount.txt";
 char * FILENAME_EMAIL = "links_email.txt";
 char * FILENAME_OTHERFILES = "links_otherFiles.txt";
 char * FILENAME_OTHERDOMAINS = "links_otherDomains.txt";
 char * FILENAME_LINKS_DOWNLOADED = "downloaded.txt";
 char * FILENAME_LINKS_NOT_DOWNLOADED = "not_downloaded.txt";
-char * workspace_main = "workspace_crowler/";
+char * workspace_main = "workspace_crawler/";
 char * workspance_links = "links/";
 int USE_LOCAL_INDEX_HTML = 0;
 int PRINT_LINKS_FOUND = 0;
@@ -30,14 +31,18 @@ int EXTENSION_PROHIBITED_SIZE = 42;
 int customExtensions = 0;
 
 /*SETTEBLE PARAMETERS FORM COMMAND LINE*/
+int TIMEOUT_TO_DOWNLOAD = 20; //sec
+int TRIES_TO_DOWNLOAD = 3; //attepm
+int WAIT_TO_DOWNLOAD = 10; //sec
 int SAVE_LINKS_OTHERDOMAINS = 0;
 int SAVE_LINKS_OTHERFILES = 0;
 int SAVE_EMAIL = 0;
 int CURRENT_LEVEL = 1;
 int EXPLICIT = 0;
 int ERASE_WORKSPACE_FOLDER = 1;
-int LEVEL_ALLOWED = 5;
+int LEVEL_ALLOWED = 3;
 
+char * EXT_PARAM;
 //SEMPRE ADICINOAR EXTENSOES NO ARRAY ALL E NO ARRAY "FIXO" || alterar EXTENSION_PROHIBITED_SIZE e EXTENSION_ALLOWED_SIZE
 char * EXTENSIONS_ALL[] = {".html", ".htm", ".php", ".rb", ".rhtml", ".dll", ".cfm", ".cgi", ".svg", ".py", "jhtml", ".xhtml", ".swf", ".asp", ".aspx", ".css", ".js", ".xml", ".ico", ".jpg", ".jpeg", ".png", ".csp", ".do", ".jsf", ".jspx", ".pdf", ".gif", ".ps", ".txt", ".shar", ".roff", ".tgz", ".zip", ".rar", ".tar", ".csv", ".exe", ".bat", ".rtf", ".doc", ".docx", ".odt", ".gz"};
 char * EXTENSIONS_PROHIBITED[] = {".php", ".css", ".js", ".xml", ".ico", ".jpg", ".jpeg", ".png", ".pdf", ".gif", ".rb", ".rhtml", ".dll", ".cfm", ".cgi", ".svg", ".py", "jhtml", ".xhtml", ".swf", ".asp", ".aspx", ".csp", ".do", ".jsf", ".jspx", ".ps", ".txt", ".shar", ".roff", ".tgz", ".zip", ".rar", ".tar", ".csv", ".exe", ".bat", ".rtf", ".doc", ".docx", ".odt", ".gz"};

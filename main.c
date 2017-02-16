@@ -1,7 +1,7 @@
 /******************************************************************************
  * FILE: main.c
  * DESCRIPTION:
- *   Crowler to map whole website (webpages, imagens, style files, etc).
+ *   Crawler to map whole website (webpages, imagens, style files, etc).
  * AUTHOR: Paulo Mateus
  * EMAIL: paulomatew@gmail.com
  ******************************************************************************/
@@ -81,11 +81,12 @@ int randomNumber() {
 }
 
 void init() {
-    int i = system(str_concat("mkdir ", workspace_main));
-    int j = system(str_concat("mkdir ", str_concat(workspace_main, workspance_links)));
-
+    if (CURRENT_LEVEL == 1) {
+        int i = system(str_concat("mkdir ", workspace_main));
+        int j = system(str_concat("mkdir ", str_concat(workspace_main, workspance_links)));
+    }
     //Apagando anteriores
-    if (OVERIDE_OLD_FILES) {
+    if (CURRENT_LEVEL == 1 && OVERIDE_OLD_FILES) {
         //        FILE * a = fopen(FILENAME_LINKS, "w");
         //        if (a != NULL)
         //            fclose(a);
@@ -105,8 +106,8 @@ void init() {
 }
 
 void ending() {
-    if (ERASE_WORKSPACE_FOLDER) {
-        int i = system("rm -rf workspace_crowler");
+    if (CURRENT_LEVEL == 1 && ERASE_WORKSPACE_FOLDER) {
+        int i = system("rm -rf workspace_crawler");
     }
 }
 
@@ -126,27 +127,30 @@ int schemeMAIN(char * url, int nivel) {
         writeLinkOnFileNotDownloaded(msgErro, url);
         return 0;
     }
+    int pid = getpid();
     //writeLinkOnFileDownloaded(url); /*Tirei de depois do wget pra evitar q dois links comecem o download
     /*ao mesmo tempo, por causa demora do download*/
 
     //logs("-----------------------------------------");
     //logs("schemeMAIN()");
-    printf("schemeMAIN(): PARENT_PID: %d\tPID: %d\tCURRENT_LEVEL: %d\tURL: %s\n", getppid(), getpid(), nivel, url);
+    printf("main(): PARENT_PID: %d\tPID: %d\tCURRENT_LEVEL: %d/%d\tURL: %s\n", getppid(), pid, nivel, LEVEL_ALLOWED, url);
 
     int qntd = 0;
     int num = randomNumber();
-    char nomeArquivo[100], command[100], path[100];
+    char nomeArquivo[40] = "", command[150], path[50];
 
-    sprintf(nomeArquivo, "%d%d.txt", num, getpid());
+    sprintf(nomeArquivo, "%d%d.txt", num, pid);
+    //logs(nomeArquivo);
     sprintf(path, str_concat(str_concat("./", workspace_main), "%s"), nomeArquivo);
-    sprintf(command, "wget -q --output-document=%s ", path);
+    sprintf(command, "wget -q --output-document=%s --timeout=%d --tries=%d --wait=%d ", path, TIMEOUT_TO_DOWNLOAD, TRIES_TO_DOWNLOAD, WAIT_TO_DOWNLOAD);
+    //sprintf(command, "wget -q --output-document=%s ", path);
     char * cfinal = str_concat(command, url);
     //logs(str_concat("COMMAND TO RUN: ", cfinal));
 
     int res = system(cfinal);
-    writeLinkOnFileDownloaded(url);
-    if (res == 0) {
 
+    if (res == 0) {
+        writeLinkOnFileDownloaded(url);
         char * arq = parserINIT(nomeArquivo, path, url);
 
         qntd = getLinesFromFile(arq);
@@ -175,17 +179,24 @@ void repeatScheme(char * txt, int nv) {
 
     //Father code (before child processes start)
     for (i = 0; *(linhasArr + i); i++) {
-        if (!checkIfLinkWasDownloaded(*(linhasArr + i))) {//Se link já foi baixado, nem crio um novo processo
+        if (!checkIfLinkWasDownloaded(*(linhasArr + i)) && nv + 1 <= LEVEL_ALLOWED) {//Se link já foi baixado, nem crio um novo processo
             if ((child_pid = fork()) == 0) {
                 //printf("Processo filho(%d): contador=%d\n", getpid(), i);
                 //printf("Criou pid: %d\t%s\n", getpid(), *(linhasArr + i));
-                forkCreated();
+                //forkCreated(*(linhasArr + i));
 
-                char * args = str_concat("-link=", *(linhasArr + i));
+                char * args = CURRENT_FILE_NAME;
+                args = str_concat(args, str_concat(" -link=", *(linhasArr + i)));
+                //char * args = str_concat("-link=", *(linhasArr + i));
                 char str1[20];
                 sprintf(str1, "%d", LEVEL_ALLOWED);
 
                 args = str_concat(args, str_concat(" -level=", str1));
+                if (EXT_PARAM != NULL) {
+                    args = str_concat(args, str_concat(" ", EXT_PARAM));
+                    //logs(EXT_PARAM);
+                }
+
                 if (EXPLICIT) {
                     args = str_concat(args, " --explicit");
                 }
@@ -202,18 +213,41 @@ void repeatScheme(char * txt, int nv) {
                     args = str_concat(args, " --otherfiles");
                 }
 
+                char strT1[10];
+                sprintf(strT1, "%d", TRIES_TO_DOWNLOAD);
+                args = str_concat(args, str_concat(" -wtries=", strT1));
+                //                logi(TRIES_TO_DOWNLOAD);
+                //                logs(strT1);
+                char strT2[10];
+                sprintf(strT2, "%d", TIMEOUT_TO_DOWNLOAD);
+                args = str_concat(args, str_concat(" -wtimeout=", strT2));
+                //                logi(TIMEOUT_TO_DOWNLOAD);
+                //                logs(strT2);
+                char strT3[10];
+                sprintf(strT3, "%d", WAIT_TO_DOWNLOAD);
+                args = str_concat(args, str_concat(" -wwait=", strT3));
+                //                logi(WAIT_TO_DOWNLOAD);
+                //                logs(strT3);
+
                 /*REMOVER*/
                 //CURRENT_LEVEL = nv;
                 /**/
 
                 char str2[20];
-                sprintf(str2, "%d", (nv + 1));
+                sprintf(str2, "%d", (CURRENT_LEVEL + 1));
                 args = str_concat(args, str_concat(" -nv=", str2));
 
-                //execl(CURRENT_FILE_NAME, args);
-                //execl("cd /dist/Debug/GNU-Linux/ && ./crowler1", NULL);
+                //logs(CURRENT_FILE_NAME);
+                //logs(args);
 
-                schemeMAIN(*(linhasArr + i), nv + 1);
+                char *envp[] = {
+                    "HOME=/",
+                    "PATH=/bin:/usr/bin",
+                    "TZ=UTC0",
+                    0
+                };
+
+                execve(CURRENT_FILE_NAME, str_split(args, ' '), envp);
                 exit(0);
             }
         } else {
@@ -226,10 +260,11 @@ void repeatScheme(char * txt, int nv) {
     while ((wpid = wait(&status)) > 0); // this way, the father waits for all the child processes 
 }
 
-void forkCreated() {
-    char * workPath1 = str_concat(str_concat("./", workspace_main), "processesCount.txt");
+void forkCreated(char * url) {
+    printf("forkCreated() %s\n", url);
+    char * workPath1 = str_concat(str_concat("./", workspace_main), FILENAME_PROCESS_COUNTER);
 
-    FILE * arq = fopen(workPath1, "a+");
+    FILE * arq = fopen(workPath1, "a");
     if (arq != NULL) {
         fprintf(arq, "1\n");
         fclose(arq);
@@ -248,26 +283,31 @@ void abortingCauseByParameter(char * param) {
 }
 
 int main(int argc, char *argv[]) {
+    //printf("main() INICIO pid: %d\n", getpid());
     CURRENT_FILE_NAME = argv[0];
 
-    //1 - COLOCAR EXECL
-    //1.2 - PASSAR NIVEL ATUAL POR UM PARAMETRO NO INPUT (-nv=NUM)
+    //    for (int ai = 0; ai < argc; ai++) {
+    //        printf("argc[%d] = %s\n", ai, argv[ai]);
+    //    }
+    //exit(0);
 
-    char * urlToUseCrowler;
+    //1 - COLOCAR EXECL
+
+    char * urlToUseCrawler;
     if (1 == 1) {
         if (argv[1] != NULL && str_equals("--help", argv[1])) {
             printHelp();
         }
         int ai;
-        urlToUseCrowler = "";
+        urlToUseCrawler = "";
 
         int required = 0;
         for (ai = 0; ai < argc; ai++) {
             if (required == 0 && str_startsWith((argv[ai]), "-link=")) {
                 required = 1;
-                urlToUseCrowler = argv[ai];
-                memmove(urlToUseCrowler, urlToUseCrowler + 6, strlen(urlToUseCrowler));
-                if (strlen(urlToUseCrowler) < 1)
+                urlToUseCrawler = argv[ai];
+                memmove(urlToUseCrawler, urlToUseCrawler + 6, strlen(urlToUseCrawler));
+                if (strlen(urlToUseCrawler) < 1)
                     abortingCauseByParameter("LINK");
 
             } else if (str_startsWith(argv[ai], "-level=")) {
@@ -285,6 +325,8 @@ int main(int argc, char *argv[]) {
 
             } else if (str_startsWith(argv[ai], "-ext=")) {
                 char * l = argv[ai];
+                EXT_PARAM = str_copy(argv[ai]);
+                //strcpy(EXT_PARAM, argv[ai]);
                 memmove(l, l + 5, strlen(l));
                 //logs(str_concat("EXTENSOES: ", l));
                 if (str_contains(l, ",")) {
@@ -323,7 +365,27 @@ int main(int argc, char *argv[]) {
                 char * l = argv[ai];
 
                 memmove(l, l + 4, strlen(l));
+
                 CURRENT_LEVEL = str_stringToInt(l);
+                //logi(CURRENT_LEVEL);
+            } else if (str_startsWith(argv[ai], "-wtries=")) {
+                char * l = argv[ai];
+
+                memmove(l, l + 8, strlen(l));
+
+                TRIES_TO_DOWNLOAD = str_stringToInt(l);
+            } else if (str_startsWith(argv[ai], "-wtimeout=")) {
+                char * l = argv[ai];
+
+                memmove(l, l + 10, strlen(l));
+
+                TIMEOUT_TO_DOWNLOAD = str_stringToInt(l);
+            } else if (str_startsWith(argv[ai], "-wwait=")) {
+                char * l = argv[ai];
+
+                memmove(l, l + 7, strlen(l));
+
+                WAIT_TO_DOWNLOAD = str_stringToInt(l);
             }
         }
 
@@ -331,6 +393,9 @@ int main(int argc, char *argv[]) {
             printHelp();
         }
     }
+
+
+
     //    char ** extensoes = getExtensionsAllowed();
     //    int tam = getExtensionsAllowedSize(), i1;
     //    for (i1 = 0; i1 < getExtensionsAllowedSize(); i1++) {
@@ -346,28 +411,29 @@ int main(int argc, char *argv[]) {
     gettimeofday(&inicio, NULL);
 
 
-    forkCreated();
+    //logs(urlToUseCrawler);
+    forkCreated(urlToUseCrawler);
 
     init();
     int qntd_links = 0;
 
     if (USE_LOCAL_INDEX_HTML == 0) {
-        //urlToUseCrowler = "www.jpcontabil.com/crowler";
-        //urlToUseCrowler = "www.openbsd.org";
+        //urlToUseCrawler = "www.jpcontabil.com/crowler";
+        //urlToUseCrawler = "www.openbsd.org";
 
         if (CURRENT_LEVEL == 1) {//ANOTA a primeira URL APENAS. As demais seão escritas a medida q forem sendo encontradas
-            writeAndEnumerate(urlToUseCrowler);
+            writeAndEnumerate(urlToUseCrawler);
         }
 
         char * workPath = str_concat(str_concat(str_concat("./", workspace_main), workspance_links), "0a.txt");
 
         FILE * arq = fopen(workPath, "w+");
         if (arq != NULL) {
-            fprintf(arq, "%s\n", urlToUseCrowler);
+            fprintf(arq, "%s\n", urlToUseCrawler);
             fclose(arq);
         }
 
-        qntd_links = schemeMAIN(urlToUseCrowler, CURRENT_LEVEL);
+        qntd_links = schemeMAIN(urlToUseCrawler, CURRENT_LEVEL);
 
         //removeDuplicatedLinksFolder();
         //enumerateAndSave();
@@ -390,21 +456,61 @@ int main(int argc, char *argv[]) {
     //        enumerateAndSave();
     //    }
 
-    //Garantir que método seja chamado apenas pela última thread/processo
 
-    //logs("acabou");
-    ending();
+    //printf("main() FIM pid: %d\n", getpid());
+    if (CURRENT_LEVEL == 1) {
+        printf("\n STATISTICS:\n");
 
-    /*MEASURE*/
-    gettimeofday(&final, NULL);
-    float tmiliF = (1000 * (final.tv_sec - inicio.tv_sec) + (final.tv_usec - inicio.tv_usec) / 1000);
-    tmili = (int) tmiliF;
+        int linhas = getLinesFromFile(FILENAME_LINKS);
+        printf(" %d valid link(s) found\n", linhas);
 
-    int seconds = (int) (tmiliF / 1000) % 60;
-    int minutes = (int) ((int) (tmiliF / 60000) % 60);
-    int hours = (int) ((int) (tmiliF / 3600000) % 24);
+        linhas = getLinesFromFile(FILENAME_EMAIL);
+        if (linhas != -1) {
+            printf(" %d email(s) found\n", linhas);
+        }
 
-    //printf("TEMPO DECORRIDO: %dh %dmin %ds      ||      %.3fs (%dms)\n", hours, minutes, seconds, (tmiliF / 1000), (int) tmiliF);
+        linhas = getLinesFromFile(FILENAME_OTHERFILES);
+        if (linhas != -1) {
+            printf(" %d file(s) with prohibited extension found\n", linhas);
+        }
+
+        linhas = getLinesFromFile(FILENAME_OTHERDOMAINS);
+        if (linhas != -1) {
+            printf(" %d link(s) from others domains found\n", linhas);
+        }
+
+        linhas = getLinesFromFile(str_concat(str_concat("./", workspace_main), FILENAME_LINKS_DOWNLOADED));
+        if (linhas != -1) {
+            printf(" %d page(s) mapped\n", linhas);
+        } /*else {
+            printf(" 0 page(s) mapped\n");
+        }*/
+
+        linhas = getLinesFromFile(str_concat(str_concat("./", workspace_main), FILENAME_LINKS_NOT_DOWNLOADED));
+        if (linhas != -1) {
+            printf(" %d error(s) while trying to download page(s)\n", (linhas / 2)); //tiro o \n do final? testar isso...
+        }
+
+        linhas = getLinesFromFile(str_concat(str_concat("./", workspace_main), FILENAME_PROCESS_COUNTER));
+        if (linhas != -1) {
+            printf(" %d process(es) created\n", linhas + 1); //tiro o \n do final? testar isso...
+        }
+
+        ending();
+
+
+        /*MEASURE*/
+        gettimeofday(&final, NULL);
+        float tmiliF = (1000 * (final.tv_sec - inicio.tv_sec) + (final.tv_usec - inicio.tv_usec) / 1000);
+        tmili = (int) tmiliF;
+
+
+        int seconds = (int) (tmiliF / 1000) % 60;
+        int minutes = (int) ((int) (tmiliF / 60000) % 60);
+        int hours = (int) ((int) (tmiliF / 3600000) % 24);
+        int milliseconds = (int) tmiliF - (int) (hours * 3600000)-(int) (minutes * 60000) - (int) (seconds * 1000);
+        printf("\tELAPSED TIME: %dh %dmin %ds %dms\n", hours, minutes, seconds, milliseconds);
+    }
 
     return (EXIT_SUCCESS);
 }
@@ -413,21 +519,21 @@ void printHelp() {
     printf("\t    #############################################\n");
     printf("\t    #############################################\n");
     printf("\t    #############         ########  2017  #######\n");
-    printf("\t    ############# CROWLER ##### by: PMateus #####\n");
+    printf("\t    ############# CRAWLER ##### by: PMateus #####\n");
     printf("\t    #############         ########   1.0  #######\n");
     printf("\t    #############################################\n");
     printf("\t    #############################################\n\n\n");
     printf("Parameters (* = OPTIONAL):\n\n");
-    printf("\tlink             | choose one link to make crowler work.\n\n");
-    printf("\tlevel*           | set the deep level of crowler (default: 5).\n");
+    printf("\tlink             | choose one link to make crawler work.\n\n");
+    printf("\tlevel*           | set the deep level of crawler (default: 5).\n");
     printf("\t                   You can set this from 1 to 10.\n\n");
     printf("\text*             | set the allowed files extensions that \n");
-    printf("\t                   crowler can access (default: html and htm).\n");
+    printf("\t                   crawler can access (default: html and htm).\n");
     printf("\t                   Use common (,) to separate extensions.\n\n");
     printf("\tnoerase*         | if you set this, all files (pages) catched\n");
     printf("\t                   will be available to you inside a folder\n");
-    printf("\t                   named 'workspace_crowler'.\n\n");
-    printf("\texplicit*        | if you set this, the crowler only will map \n");
+    printf("\t                   named 'workspace_crawler'.\n\n");
+    printf("\texplicit*        | if you set this, the crawler only will map \n");
     printf("\t                   pages with explicit extensions. Example: \n");
     printf("\t                   'www.openbsd.org/panel' won't be mapped.\n");
     printf("\t                   'www.openbsd.org/panel/index.html' will be mapped.\n\n");
@@ -439,16 +545,22 @@ void printHelp() {
     printf("\totherfiles*      | if you set this, the program will save every\n");
     printf("\t                   file with prohibited extension on a file named \n");
     printf("\t                   'links_otherDomains.txt'.\n\n");
+    printf("\twtimeout*        | set the timeout (in seconds) for program wait for\n");
+    printf("\t                   the server response. [DEFAULT 20s].\n\n");
+    printf("\twtries*          | set the program attemps to download page if \n");
+    printf("\t                   couldn't yet. [DEFAULT 3].\n\n");
+    printf("\twwait*           | set this for program wait (in seconds) between\n");
+    printf("\t                   each re-download attemp. [DEFAULT 10s].\n\n");
     printf("HOW TO:\n");
-    printf("\t./crowler -link=http://...com -level=3\n");
-    printf("\t./crowler -link=www...org -ext=html,htm\n");
-    printf("\t./crowler -link=www...com/painel --explicit\n");
-    printf("\t./crowler -link=subdomain.maindomain.com --noerase -level=5 -ext=html,htm,php --explicit --email --otherdomains --otherfiles\n\n\n");
+    printf("\t./crawler -link=http://...com -level=3\n");
+    printf("\t./crawler -link=www...org -ext=html,htm\n");
+    printf("\t./crawler -link=www...com/painel --explicit --email --otherdomains --otherfiles\n");
+    printf("\t./crawler -link=subdomain.maindomain.com --noerase -level=5 -ext=html,htm,php --explicit -wwait=10 -wtimeout=10 -wtries=5\n\n\n");
     printf("\t#######################################################\n");
     printf("\t                      OBSERVATIONS\n");
     printf("\t#######################################################\n\n");
     printf(" 1- We strong recommend you just use this software only on websites you own. Otherwise you can cause unnecessary problems...\n");
-    printf(" 2- The crowler doesn't work for different domains. If the website www.test.com has a google link like www.google.com/accessIt, the crowler will dump this link as 'otherDomain', and will block further actions.\n");
+    printf(" 2- The crawler doesn't work for different domains. If the website www.test.com has a google link like www.google.com/accessIt, the crawler will dump this link as 'otherDomain', and will block further actions.\n");
     printf(" 3- Subdomains won't be mapped. Ex: www.google.com AND groups.google.com.\n");
     printf(" 4- Do NOT include spaces between PARAMETERS and their CONTENT, or it won't work properly.\n");
     printf(" 5- The parameters order does not matters.\n");

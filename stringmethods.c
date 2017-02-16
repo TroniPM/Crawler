@@ -1,7 +1,7 @@
 /******************************************************************************
  * FILE: stringmethods.c
  * DESCRIPTION:
- *   Crowler to map whole website (webpages, imagens, style files, etc).
+ *   Crawler to map whole website (webpages, imagens, style files, etc).
  * AUTHOR: Paulo Mateus
  * EMAIL: paulomatew@gmail.com
  ******************************************************************************/
@@ -18,8 +18,23 @@
 #include "stringmethods.h"
 #include "settings.h"
 
+char *str_copy(const char *source) {
+    int ii = 0;
+    int len = strlen(source);
+    char *copy = malloc(len + 1);
+    char* dest = copy;
+
+    while (*source != '\0') {
+        *dest++ = *source++;
+    }
+
+    //*dest = '\0';
+
+    return copy;
+}
+
 int str_stringToInt(char * str) {
-    int len = strlen(str), i, result = -9999;
+    int len = strlen(str), i, result = 0;
     for (i = 0; i < len; i++) {
         result = result * 10 + (str[i] - '0');
     }
@@ -28,18 +43,18 @@ int str_stringToInt(char * str) {
 }
 
 int getLinesFromFile(char * txt) {
-    int lines = 0;
-    FILE * arq = fopen(txt, "r");
+    //    int lines = 0, i;
+    //    FILE * arq = fopen(txt, "r");
+    char * arq = readfile(txt);
+    int i;
     if (arq != NULL) {
-        lines = 1;
-        int ch = 0;
+        char ** arr = str_split(arq, '\n');
+        for (i = 0; *(arr + i); i++) {
 
-        while (!feof(arq)) {
-            ch = fgetc(arq);
-            if (ch == '\n' || ch == '\r') {
-                lines++;
-            }
         }
+        return i;
+    } else {
+        return -1;
     }
 }
 
