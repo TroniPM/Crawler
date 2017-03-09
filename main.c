@@ -118,12 +118,11 @@ int schemeMAIN(char * url, int nivel) {
 
     if (checkIfLinkWasDownloaded(url)) {
         char * msgErro = "LINK JÁ FOI BAIXADO";
-        //logs(str_concat(str_concat(msgErro, ":\t"), url));
         writeLinkOnFileNotDownloaded(msgErro, url);
         return 0;
     } else if (nivel > LEVEL_ALLOWED) {
-        char * msgErro = "PROIBIDO BAIXAR ACIMA DO NIVEL 5";
-        //logs(str_concat(str_concat(msgErro, ":\t"), url));
+        char msgErro[51] ;
+        sprintf(msgErro, "%s %d", "PROIBIDO BAIXAR ACIMA DO NIVEL ", LEVEL_ALLOWED);
         writeLinkOnFileNotDownloaded(msgErro, url);
         return 0;
     }
@@ -140,12 +139,10 @@ int schemeMAIN(char * url, int nivel) {
     char nomeArquivo[40] = "", command[150], path[50];
 
     sprintf(nomeArquivo, "%d%d.txt", num, pid);
-    //logs(nomeArquivo);
     sprintf(path, str_concat(str_concat("./", workspace_main), "%s"), nomeArquivo);
     sprintf(command, "wget -q --output-document=%s --timeout=%d --tries=%d --wait=%d ", path, TIMEOUT_TO_DOWNLOAD, TRIES_TO_DOWNLOAD, WAIT_TO_DOWNLOAD);
-    //sprintf(command, "wget -q --output-document=%s ", path);
+   
     char * cfinal = str_concat(command, url);
-    //logs(str_concat("COMMAND TO RUN: ", cfinal));
 
     int res = system(cfinal);
 
@@ -261,7 +258,7 @@ void repeatScheme(char * txt, int nv) {
 }
 
 void forkCreated(char * url) {
-    printf("forkCreated() %s\n", url);
+    //printf("forkCreated() %s\n", url);
     char * workPath1 = str_concat(str_concat("./", workspace_main), FILENAME_PROCESS_COUNTER);
 
     FILE * arq = fopen(workPath1, "a");
@@ -283,15 +280,7 @@ void abortingCauseByParameter(char * param) {
 }
 
 int main(int argc, char *argv[]) {
-    //printf("main() INICIO pid: %d\n", getpid());
     CURRENT_FILE_NAME = argv[0];
-
-    //    for (int ai = 0; ai < argc; ai++) {
-    //        printf("argc[%d] = %s\n", ai, argv[ai]);
-    //    }
-    //exit(0);
-
-    //1 - COLOCAR EXECL
 
     char * urlToUseCrawler;
     if (1 == 1) {
@@ -438,26 +427,7 @@ int main(int argc, char *argv[]) {
         //removeDuplicatedLinksFolder();
         //enumerateAndSave();
     }
-    //    } else {
-    //        int num = randomNumber();
-    //        char nomeArquivo[100];
-    //
-    //        sprintf(nomeArquivo, "%d%d.txt", num, getpid());
-    //
-    //        char * URL_DOMAIN = "";
-    //char * URL_DOMAIN = "www.openbsd.org";
-    //char* URL_DOMAIN = "www.garanhuns.pe.gov.br";
-    //char * URL_DOMAIN = "www.superdownloads.com.br";
-    //char * URL_DOMAIN = "www.ufrpe.br";
-    //char * URL_DOMAIN = "en.wikipedia.org/";
-
-    //qntd_links = parserINIT(nomeArquivo, "./pags/index.html", URL_DOMAIN);
-    //removeDuplicatedLinks();
-    //        enumerateAndSave();
-    //    }
-
-
-    //printf("main() FIM pid: %d\n", getpid());
+    
     if (CURRENT_LEVEL == 1) {
         printf("\n STATISTICS:\n");
 
@@ -525,7 +495,7 @@ void printHelp() {
     printf("\t    #############################################\n\n\n");
     printf("Parameters (* = OPTIONAL):\n\n");
     printf("\tlink             | choose one link to make crawler work.\n\n");
-    printf("\tlevel*           | set the deep level of crawler (default: 5).\n");
+    printf("\tlevel*           | set the deep level of crawler (default: 3).\n");
     printf("\t                   You can set this from 1 to 10.\n\n");
     printf("\text*             | set the allowed files extensions that \n");
     printf("\t                   crawler can access (default: html and htm).\n");

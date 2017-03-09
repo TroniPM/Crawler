@@ -418,7 +418,7 @@ int tratarLinha(char * linha) {
             tokenTrimmed = str_trim(token);
             char * pch;
 
-            pch = strtok(tokenTrimmed, " "); //" ,.-"
+            pch = strtok(tokenTrimmed, " "); 
 
             while (pch != NULL) {
                 if (checkIfLineContainsLink(pch)) {
@@ -754,8 +754,9 @@ char * parserINIT(char * name, char * path_with_filename, char * url) {
         logs("parserINIT() ERROR AT FILE .HTML/.HTM OPENING");
         exit(EXIT_FAILURE);
     }
-    //logs(str_concat("DOMINIO ", getDomainWithBar()));
+    
     int qntd_links = 0;
+    
     while ((read = getline(&line, &len, fp)) != -1) {
         if (checkIfLineContainsLink(line) || checkIfLineContainsSrc(line)) {
             qntd_links += tratarLinha(line);

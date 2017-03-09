@@ -1,0 +1,4 @@
+./crawler -link=http://www.openbsd.org/crowler/index.html -level=5
+./crawler -link=http://www.openbsd.org/ -ext=html,htm,php --explicit -level=3 --email --otherdomains --otherfiles --noerase
+./crawler -link=www.openbsd.org --explicit --email --otherfiles --otherdomains
+./crawler -link=http://www.openbsd.org/crowler/index.html -level=5 -wwait=4 -wtimeout=50 -wtries=60
